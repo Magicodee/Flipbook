@@ -148,6 +148,7 @@ img{display:block;max-width:100%;}
 }
 .slideshow-stage:active{cursor:grabbing;}
 .slide-track{
+  position:relative;
   display:flex;
   align-items:center;
   gap:20px;
@@ -169,7 +170,7 @@ img{display:block;max-width:100%;}
   pointer-events:none;
 }
 .slide.active{opacity:1;filter:saturate(1);transform:scale(1);pointer-events:auto;}
-.slide img{width:100%;height:100%;object-fit:cover;filter:saturate(1.03) contrast(1.02);-webkit-user-drag:none;}
+.slide img{width:100%;height:100%;object-fit:cover;object-position:center center;filter:saturate(1.03) contrast(1.02);-webkit-user-drag:none;}
 .slide .frame-shade{
   position:absolute;inset:0;
   background:linear-gradient(0deg,rgba(6,8,12,.85) 0%,rgba(6,8,12,.05) 46%);
@@ -225,6 +226,7 @@ img{display:block;max-width:100%;}
   height:min(72vh,480px);
   margin:0 auto;
   position:relative;
+  left: 20px;
   cursor:grab;
   touch-action:pan-y;
   user-select:none;
@@ -331,7 +333,7 @@ img{display:block;max-width:100%;}
   box-shadow:0 10px 24px rgba(0,0,0,.45);
   background-size:cover;background-position:center;
 }
-.cover-face .cover-text{position:relative;z-index:2;text-align:center;}
+.cover-face .cover-text{position:relative;z-index:2;text-align:center;transition:opacity .35s ease;}
 .cover-face .cover-text .eyebrow{margin-bottom:8px;}
 .cover-face .cover-text h3{
   font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
@@ -507,6 +509,14 @@ img{display:block;max-width:100%;}
   width:38px;height:38px;border-radius:50%;
   border:1px solid rgba(243,239,228,.35);
   color:var(--cream);background:transparent;font-size:18px;cursor:pointer;
+}
+
+/* ---------------- MOBILE SIZING ---------------- */
+@media (max-width:520px){
+  .book-stage{
+    width:min(58vw,240px);
+    height:min(46vh,310px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -704,6 +714,9 @@ document.getElementById('heroSub').textContent = CONFIG.heroSubtitle;
    SLIDESHOW — a moving filmstrip of cards. The strip glides
    sideways on its own timer (not tied to page scroll), and the
    visitor can drag/swipe it or use the arrow buttons any time.
+   Centering is computed from each card's actual layout position
+   (offsetLeft/offsetWidth, unaffected by the track's transform)
+   so the active photo lands exactly in the middle of the stage.
    ========================================================= */
 (function(){
   const stage = document.getElementById('slideStage');
@@ -736,21 +749,25 @@ document.getElementById('heroSub').textContent = CONFIG.heroSubtitle;
   let timer = null;
   let dragging = false, startX = 0, baseX = 0;
 
-  function cardStep(){
-    const gap = parseFloat(getComputedStyle(track).gap) || 20;
-    return cardEls[0].getBoundingClientRect().width + gap;
-  }
-
   function currentX(){
     const t = getComputedStyle(track).transform;
     if(t === 'none') return 0;
     return new DOMMatrixReadOnly(t).m41;
   }
 
-  function render(animate){
+  // Exact centering: use the card's own layout position (offsetLeft is
+  // relative to the nearest positioned ancestor — .slideshow-stage — and
+  // is unaffected by the track's transform), so the active card's true
+  // center always lands on the stage's true center, with no drift.
+  function targetOffsetFor(i){
     const stageW = stage.getBoundingClientRect().width;
-    const cardW = cardEls[0].getBoundingClientRect().width;
-    const offset = (stageW - cardW) / 2 - index * cardStep();
+    const card = cardEls[i];
+    const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+    return stageW / 2 - cardCenter;
+  }
+
+  function render(animate){
+    const offset = targetOffsetFor(index);
     track.style.transition = animate ? 'transform .65s cubic-bezier(.22,.68,.32,1)' : 'none';
     track.style.transform = `translateX(${offset}px)`;
     cardEls.forEach((el,i)=> el.classList.toggle('active', i===index));
@@ -776,7 +793,7 @@ document.getElementById('heroSub').textContent = CONFIG.heroSubtitle;
   prevBtn.addEventListener('click', ()=>{ prev(); startAuto(); });
 
   // Drag / swipe support — the strip follows the finger/cursor live,
-  // then snaps to the nearest card on release.
+  // then snaps back to dead-center on the active card on release.
   stage.addEventListener('pointerdown', e=>{
     dragging = true;
     stopAuto();
@@ -793,7 +810,7 @@ document.getElementById('heroSub').textContent = CONFIG.heroSubtitle;
     if(!dragging) return;
     dragging = false;
     const delta = (e.clientX ?? startX) - startX;
-    const step = cardStep();
+    const step = cardEls[0].getBoundingClientRect().width + (parseFloat(getComputedStyle(track).gap) || 20);
     if(delta < -step * 0.18) next();
     else if(delta > step * 0.18) prev();
     else render(true);
@@ -892,6 +909,14 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
     <div class="face back"><img src="${data.coverBackImage || data.coverImage}" alt="">${grain}${fold}</div>`;
   book.appendChild(cover);
   sheetEls.push(cover);
+  const coverTextEl = cover.querySelector('.cover-text');
+  // "Class of 2027" (the cover title) should only ever be readable while
+  // the book is fully closed and showing its cover. Drive this explicitly
+  // from state rather than relying solely on CSS backface-visibility,
+  // which can render inconsistently mid-flip on some mobile browsers.
+  function updateCoverText(){
+    if(coverTextEl) coverTextEl.style.opacity = currentPage === 0 ? '1' : '0';
+  }
 
   // Leaf sheets
   (data.leaves || []).forEach(leaf=>{
@@ -928,6 +953,7 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
     prevBtn.disabled = currentPage === 0;
     nextBtn.disabled = currentPage === total;
     countEl.textContent = currentPage === 0 ? 'Closed' : `${currentPage} / ${total}`;
+    updateCoverText();
   }
 
   function playFlip(){
@@ -975,9 +1001,19 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
   // The book's spine sits on its left edge, so once it's open the
   // visible pages read as leaning left of the container's center.
   // Nudge the whole stage right while open, and back when closed.
-  const OPEN_SHIFT = 166; // px — increase/decrease to taste
+  // Scaled down on narrow/mobile viewports to match the smaller book size.
+  function openShift(){
+    const isMobile = window.matchMedia('(max-width:520px)').matches;
+    const desired = isMobile ? 100 : 166;
+    // Never push the book past the right edge of the viewport: cap the
+    // shift to whatever space is actually free to the right of the stage.
+    const rect = stage.getBoundingClientRect();
+    const safeMargin = 10;
+    const available = Math.max(0, window.innerWidth - rect.right - safeMargin);
+    return Math.min(desired, available);
+  }
   function shiftOpen(){
-    gsap.to(stage, { x: OPEN_SHIFT, duration:.7, ease:'power2.out' });
+    gsap.to(stage, { x: openShift(), duration:.7, ease:'power2.out' });
   }
   function shiftClosed(){
     gsap.to(stage, { x: 0, duration:.7, ease:'power2.out' });
@@ -993,6 +1029,7 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
     prevBtn.disabled = false;
     nextBtn.disabled = currentPage === total;
     countEl.textContent = `${currentPage} / ${total}`;
+    updateCoverText();
   }
   function prev(){
     if(animating || currentPage <= 0) return;
@@ -1004,6 +1041,7 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
     prevBtn.disabled = currentPage === 0;
     nextBtn.disabled = false;
     countEl.textContent = currentPage === 0 ? 'Closed' : `${currentPage} / ${total}`;
+    updateCoverText();
   }
 
   nextBtn.addEventListener('click', next);
@@ -1090,6 +1128,7 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
       prevBtn.disabled = currentPage === 0;
       nextBtn.disabled = currentPage === total;
       countEl.textContent = currentPage === 0 ? 'Closed' : `${currentPage} / ${total}`;
+      updateCoverText();
     });
   }
   stage.addEventListener('pointerup', endDrag);
