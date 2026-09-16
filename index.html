@@ -182,9 +182,11 @@ img{display:block;max-width:100%;}
   margin-top:6px;font-size:12.5px;color:rgba(243,239,228,.65);line-height:1.7;
 }
 
-/* ---------------- YEARBOOK (JS-driven flipbook) ---------------- */
+/* ---------------- YEARBOOK (realistic 3D flipbook) ---------------- */
 .book-section{
-  background:var(--ink);
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 78%, rgba(0,0,0,.55), transparent 70%),
+    var(--ink);
   padding:120px 24px 130px;
   text-align:center;
 }
@@ -194,17 +196,34 @@ img{display:block;max-width:100%;}
   font-size:clamp(26px,4.4vw,44px);
 }
 .book-stage{
-  perspective:2400px;
-  width:min(88vw,340px);
-  height:min(72vh,460px);
+  perspective:2800px;
+  perspective-origin:50% 40%;
+  width:min(88vw,380px);
+  height:min(72vh,480px);
   margin:0 auto;
   position:relative;
 }
+.book-tilt{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transform:rotateX(11deg);
+}
+/* soft contact shadow the book casts on the "table" beneath it */
+.book-shadow-under{
+  position:absolute;
+  left:6%;right:6%;bottom:-26px;
+  height:40px;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 72%);
+  filter:blur(2px);
+  z-index:0;
+}
 .book-static-back{
   position:absolute;inset:0;
-  border-radius:2px;
-  background:linear-gradient(160deg,#1c2f4d,#0a1120);
-  box-shadow:0 20px 50px -18px rgba(0,0,0,.6);
+  border-radius:1px 3px 3px 1px;
+  background:
+    linear-gradient(100deg, rgba(255,255,255,.05) 0%, transparent 12%),
+    linear-gradient(160deg,#1c2f4d,#0a1120);
+  box-shadow:0 26px 55px -18px rgba(0,0,0,.7);
   display:flex;align-items:center;justify-content:center;
   z-index:0;
 }
@@ -212,23 +231,59 @@ img{display:block;max-width:100%;}
   font-family:'Cormorant Garamond',serif;font-style:italic;
   letter-spacing:.2em;font-size:12px;color:rgba(243,239,228,.4);
 }
-.book{position:relative;width:100%;height:100%;}
+/* stacked-paper edge, visible along the right side of the block, like real page edges */
+.page-edges{
+  position:absolute;
+  top:3%;bottom:3%;right:-3px;
+  width:7px;
+  z-index:1;
+  border-radius:0 2px 2px 0;
+  background:
+    repeating-linear-gradient(180deg,
+      #efe6cf 0px, #efe6cf 1.5px,
+      #d9cba3 1.5px, #d9cba3 2.2px);
+  box-shadow: inset -1px 0 2px rgba(0,0,0,.25), 1px 0 3px rgba(0,0,0,.3);
+}
+/* gutter/spine shading cast across the pages nearest the binding */
+.spine-shade{
+  position:absolute;top:0;bottom:0;left:0;width:26%;
+  z-index:6;pointer-events:none;
+  background:linear-gradient(90deg, rgba(0,0,0,.35), transparent);
+}
+
+.book{position:relative;width:100%;height:100%;transform-style:preserve-3d;}
 .sheet{
   position:absolute;inset:0;
   transform-style:preserve-3d;
   transform-origin:left center;
-  transition:transform .9s cubic-bezier(.65,0,.35,1);
+  will-change:transform;
 }
 .sheet .face{
   position:absolute;inset:0;
   backface-visibility:hidden;
-  border-radius:2px;
+  border-radius:1px 3px 3px 1px;
   overflow:hidden;
-  box-shadow:0 20px 50px -18px rgba(0,0,0,.6);
-  background:#111;
+  background:#efe9da;
+  box-shadow:0 22px 50px -18px rgba(0,0,0,.65);
 }
 .sheet .face.back{transform:rotateY(180deg);}
 .sheet .face img{width:100%;height:100%;object-fit:cover;display:block;}
+/* fine paper-fiber texture over every page, multiplied over the photo/color */
+.sheet .face .paper-grain{
+  position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.05;
+  mix-blend-mode:multiply;
+  pointer-events:none;
+}
+/* the moving fold-shadow that sweeps across whichever page is mid-turn,
+   giving the illusion of the paper bending rather than rotating flat */
+.sheet .face .fold-shadow{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg, transparent 0%, rgba(0,0,0,.5) 50%, transparent 100%);
+  opacity:0;
+  pointer-events:none;
+}
 .sheet .face .page-caption{
   position:absolute;left:0;right:0;bottom:0;padding:14px 16px;
   font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--cream);
@@ -237,6 +292,17 @@ img{display:block;max-width:100%;}
 .cover-face{
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
   padding:28px;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,.09) 0%, transparent 18%),
+    linear-gradient(160deg,#182a46,#0a1120);
+}
+.cover-face .cover-photo{
+  position:absolute;
+  top:14%;left:14%;right:14%;
+  height:46%;
+  border:6px solid #f4efe3;
+  box-shadow:0 10px 24px rgba(0,0,0,.45);
+  background-size:cover;background-position:center;
 }
 .cover-face .cover-text{position:relative;z-index:2;text-align:center;}
 .cover-face .cover-text .eyebrow{margin-bottom:8px;}
@@ -454,8 +520,13 @@ img{display:block;max-width:100%;}
     <h2>Turn the Pages</h2>
   </div>
   <div class="book-stage" id="bookStage">
-    <div class="book-static-back"><span id="bookBackLabel"></span></div>
-    <div class="book" id="book"></div>
+    <div class="book-shadow-under"></div>
+    <div class="book-tilt">
+      <div class="book-static-back"><span id="bookBackLabel"></span></div>
+      <div class="page-edges"></div>
+      <div class="book" id="book"></div>
+      <div class="spine-shade"></div>
+    </div>
   </div>
   <div class="book-controls">
     <button class="book-btn" id="bookPrev" aria-label="Previous page">‹</button>
@@ -644,8 +715,11 @@ document.getElementById('audio').src = CONFIG.audioSrc;
 document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
 
 /* =========================================================
-   YEARBOOK — JS-driven flipbook (no checkbox hacks, so it
-   scales to any number of pages and works reliably on mobile).
+   YEARBOOK — realistic 3D flipbook.
+   Rendered with JS (not checkbox hacks) and animated with GSAP:
+   each turn arcs the page up off the surface, sweeps a fold
+   shadow across it, and settles with an eased landing, so it
+   reads as a page bending rather than a flat card rotating.
    ========================================================= */
 (function(){
   const book = document.getElementById('book');
@@ -659,19 +733,24 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
   document.getElementById('bookBackLabel').textContent = data.backLabel || '';
   if(data.pageFlipSound) flipSound.src = data.pageFlipSound;
 
+  const grain = '<div class="paper-grain"></div>';
+  const fold = '<div class="fold-shadow"></div>';
+
   const sheetEls = [];
 
-  // Cover sheet
+  // Cover sheet (front = hardcover face with an inset photo, back = first left-hand page)
   const cover = document.createElement('div');
   cover.className = 'sheet';
   cover.innerHTML = `
-    <div class="face front cover-face" style="background-image:url(${data.coverImage});background-size:cover;background-position:center;">
+    <div class="face front cover-face">
+      <div class="cover-photo" style="background-image:url(${data.coverImage})"></div>
       <div class="cover-text">
         <div class="eyebrow">${data.coverSubtitle || ''}</div>
         <h3>${data.coverTitle || ''}</h3>
       </div>
+      ${grain}${fold}
     </div>
-    <div class="face back"><img src="${data.coverBackImage || data.coverImage}" alt=""></div>`;
+    <div class="face back"><img src="${data.coverBackImage || data.coverImage}" alt="">${grain}${fold}</div>`;
   book.appendChild(cover);
   sheetEls.push(cover);
 
@@ -683,10 +762,12 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
       <div class="face front">
         <img src="${leaf.front}" alt="">
         ${leaf.frontCaption ? `<div class="page-caption">${leaf.frontCaption}</div>` : ''}
+        ${grain}${fold}
       </div>
       <div class="face back">
         <img src="${leaf.back}" alt="">
         ${leaf.backCaption ? `<div class="page-caption">${leaf.backCaption}</div>` : ''}
+        ${grain}${fold}
       </div>`;
     book.appendChild(sheet);
     sheetEls.push(sheet);
@@ -694,16 +775,16 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
 
   let currentPage = 0;
   const total = sheetEls.length;
+  let animating = false;
 
-  function render(){
+  function setStatic(){
     sheetEls.forEach((el,i)=>{
       if(i < currentPage){
-        el.style.transform = 'rotateY(-180deg)';
-        el.style.zIndex = i + 1;
+        gsap.set(el,{ rotationY:-180, z:0, zIndex:i+1 });
       } else {
-        el.style.transform = 'rotateY(0deg)';
-        el.style.zIndex = total - i;
+        gsap.set(el,{ rotationY:0, z:0, zIndex: total - i });
       }
+      gsap.set(el.querySelectorAll('.fold-shadow'),{opacity:0});
     });
     prevBtn.disabled = currentPage === 0;
     nextBtn.disabled = currentPage === total;
@@ -712,12 +793,66 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
 
   function playFlip(){
     if(!data.pageFlipSound) return;
-    flipSound.currentTime = 0;
-    flipSound.play().catch(()=>{});
+    try{
+      flipSound.currentTime = 0;
+      flipSound.playbackRate = 0.94 + Math.random()*0.14;
+      flipSound.play().catch(()=>{});
+    }catch(e){}
   }
 
-  function next(){ if(currentPage < total){ currentPage++; playFlip(); render(); } }
-  function prev(){ if(currentPage > 0){ currentPage--; playFlip(); render(); } }
+  // Animate sheet index `i` turning forward (dir=1) or backward (dir=-1).
+  function flipSheet(i, dir, onDone){
+    const el = sheetEls[i];
+    const folds = el.querySelectorAll('.fold-shadow');
+    const from = dir === 1 ? 0 : -180;
+    const to = dir === 1 ? -180 : 0;
+    el.style.zIndex = dir === 1 ? total + 2 : total + 2; // stay on top of the pile mid-turn
+    gsap.fromTo(el,
+      { rotationY:from },
+      {
+        rotationY:to,
+        z:0,
+        duration:0.95,
+        ease:'power2.inOut',
+        onUpdate:function(){
+          const rot = gsap.getProperty(el,'rotationY');
+          const progress = Math.min(1, Math.abs((rot - from) / (to - from)));
+          // page arches up off the spread as it turns, like real paper lifting
+          const lift = Math.sin(progress * Math.PI) * 26;
+          gsap.set(el,{ z: lift });
+          // fold shadow sweeps across whichever face is currently visible
+          const showingBack = (dir === 1 && progress > 0.5) || (dir === -1 && progress < 0.5);
+          gsap.set(folds,{ opacity: Math.sin(progress * Math.PI) * (showingBack ? 0.35 : 0.5) });
+        },
+        onComplete:function(){
+          gsap.set(el,{ z:0 });
+          gsap.set(folds,{opacity:0});
+          el.style.zIndex = dir === 1 ? i + 1 : total - i;
+          if(onDone) onDone();
+        }
+      });
+  }
+
+  function next(){
+    if(animating || currentPage >= total) return;
+    animating = true;
+    playFlip();
+    flipSheet(currentPage, 1, ()=>{ animating = false; });
+    currentPage++;
+    prevBtn.disabled = false;
+    nextBtn.disabled = currentPage === total;
+    countEl.textContent = `${currentPage} / ${total}`;
+  }
+  function prev(){
+    if(animating || currentPage <= 0) return;
+    animating = true;
+    currentPage--;
+    playFlip();
+    flipSheet(currentPage, -1, ()=>{ animating = false; });
+    prevBtn.disabled = currentPage === 0;
+    nextBtn.disabled = false;
+    countEl.textContent = currentPage === 0 ? 'Closed' : `${currentPage} / ${total}`;
+  }
 
   nextBtn.addEventListener('click', next);
   prevBtn.addEventListener('click', prev);
@@ -727,7 +862,7 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
     if(x > rect.width / 2) next(); else prev();
   });
 
-  render();
+  setStatic();
 })();
 
 /* =========================================================
