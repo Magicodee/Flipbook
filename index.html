@@ -122,65 +122,84 @@ img{display:block;max-width:100%;}
 .scroll-cue .line{width:1px;height:34px;background:linear-gradient(180deg,var(--gold-bright),transparent);animation:pull 1.8s ease-in-out infinite;}
 @keyframes pull{0%,100%{transform:scaleY(.6);opacity:.4;}50%{transform:scaleY(1);opacity:1;}}
 
-/* ---------------- REEL (horizontal scroll-scrub timeline) ---------------- */
-.reel-section{
+/* ---------------- SLIDESHOW (auto-playing, not scroll-linked) ---------------- */
+.slideshow-section{
   position:relative;
   background:var(--ink-2);
-  padding-top:110px;
+  padding:110px 24px 100px;
 }
-.reel-heading{
+.slideshow-heading{
   text-align:center;
-  padding:0 24px 60px;
+  padding:0 24px 56px;
 }
-.reel-heading h2{
+.slideshow-heading h2{
   font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
   font-size:clamp(26px,4.4vw,44px);
 }
-.reel-pin{
-  height:100svh;
+.slideshow-stage{
+  position:relative;
+  width:min(94vw,1100px);
+  height:min(58vh,420px);
+  margin:0 auto;
+  overflow:hidden;
+  cursor:grab;
+  touch-action:pan-y;
+  user-select:none;
+}
+.slideshow-stage:active{cursor:grabbing;}
+.slide-track{
   display:flex;
   align-items:center;
-  overflow:hidden;
-  position:relative;
-}
-.reel-pin::before,.reel-pin::after{
-  content:"";
-  position:absolute;top:0;bottom:0;width:70px;z-index:5;pointer-events:none;
-}
-.reel-pin::before{right:0;background:linear-gradient(270deg,var(--ink-2),transparent);}
-.reel-pin::after{left:0;background:linear-gradient(90deg,var(--ink-2),transparent);}
-.reel-track{
-  display:flex;
-  gap:34px;
-  padding:0 8vw;
+  gap:20px;
+  height:100%;
   will-change:transform;
 }
-.reel-card{
+.slide{
   position:relative;
   flex:0 0 auto;
-  width:min(66vw,360px);
-  height:min(78vh,460px);
+  width:min(72vw,320px);
+  height:88%;
   border-radius:2px;
   overflow:hidden;
-  box-shadow:0 30px 60px -20px rgba(0,0,0,.6);
+  box-shadow:0 24px 55px -18px rgba(0,0,0,.65);
+  opacity:.4;
+  filter:saturate(.8);
+  transform:scale(.9);
+  transition:opacity .55s ease, transform .55s ease, filter .55s ease;
+  pointer-events:none;
 }
-.reel-card img{width:100%;height:100%;object-fit:cover;filter:saturate(1.03) contrast(1.02);}
-.reel-card .frame-shade{
+.slide.active{opacity:1;filter:saturate(1);transform:scale(1);pointer-events:auto;}
+.slide img{width:100%;height:100%;object-fit:cover;filter:saturate(1.03) contrast(1.02);-webkit-user-drag:none;}
+.slide .frame-shade{
   position:absolute;inset:0;
-  background:linear-gradient(0deg,rgba(6,8,12,.88) 0%,rgba(6,8,12,.05) 46%);
+  background:linear-gradient(0deg,rgba(6,8,12,.85) 0%,rgba(6,8,12,.05) 46%);
 }
-.reel-card .cap{
-  position:absolute;left:0;right:0;bottom:0;padding:22px 22px 20px;
+.slide .cap{
+  position:absolute;left:0;right:0;bottom:0;padding:26px 28px 24px;
 }
-.reel-card .cap .num{
+.slide .cap .num{
   font-family:'Cormorant Garamond',serif;color:var(--gold-bright);font-size:12px;letter-spacing:.3em;margin-bottom:6px;
 }
-.reel-card .cap h3{
-  font-family:'Playfair Display',serif;font-style:italic;font-size:20px;
+.slide .cap h3{
+  font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(18px,2.6vw,24px);
 }
-.reel-card .cap p{
+.slide .cap p{
   margin-top:6px;font-size:12.5px;color:rgba(243,239,228,.65);line-height:1.7;
 }
+.slideshow-controls{
+  display:flex;align-items:center;justify-content:center;gap:22px;
+  margin-top:26px;
+}
+.slide-btn{
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid rgba(201,162,77,.5);
+  background:transparent;color:var(--gold-bright);
+  font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .3s;
+}
+.slide-btn:hover{background:rgba(201,162,77,.15);}
+.slide-count{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:.15em;color:rgba(243,239,228,.6);min-width:60px;text-align:center;}
 
 /* ---------------- YEARBOOK (realistic 3D flipbook) ---------------- */
 .book-section{
@@ -189,6 +208,10 @@ img{display:block;max-width:100%;}
     var(--ink);
   padding:120px 24px 130px;
   text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:100%;
 }
 .book-heading{margin-bottom:56px;}
 .book-heading h2{
@@ -196,120 +219,15 @@ img{display:block;max-width:100%;}
   font-size:clamp(26px,4.4vw,44px);
 }
 .book-stage{
-  perspective:2800px;
-  perspective-origin:50% 40%;
-  width:min(88vw,380px);
-  height:min(72vh,480px);
+  width:min(92vw,700px);
+  height:min(62vh,440px);
   margin:0 auto;
   position:relative;
-}
-.book-tilt{
-  position:absolute;inset:0;
-  transform-style:preserve-3d;
-  transform:rotateX(11deg);
-}
-/* soft contact shadow the book casts on the "table" beneath it */
-.book-shadow-under{
-  position:absolute;
-  left:6%;right:6%;bottom:-26px;
-  height:40px;
-  background:radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 72%);
-  filter:blur(2px);
-  z-index:0;
-}
-.book-static-back{
-  position:absolute;inset:0;
-  border-radius:1px 3px 3px 1px;
-  background:
-    linear-gradient(100deg, rgba(255,255,255,.05) 0%, transparent 12%),
-    linear-gradient(160deg,#1c2f4d,#0a1120);
-  box-shadow:0 26px 55px -18px rgba(0,0,0,.7);
-  display:flex;align-items:center;justify-content:center;
-  z-index:0;
-}
-.book-static-back span{
-  font-family:'Cormorant Garamond',serif;font-style:italic;
-  letter-spacing:.2em;font-size:12px;color:rgba(243,239,228,.4);
-}
-/* stacked-paper edge, visible along the right side of the block, like real page edges */
-.page-edges{
-  position:absolute;
-  top:3%;bottom:3%;right:-3px;
-  width:7px;
-  z-index:1;
-  border-radius:0 2px 2px 0;
-  background:
-    repeating-linear-gradient(180deg,
-      #efe6cf 0px, #efe6cf 1.5px,
-      #d9cba3 1.5px, #d9cba3 2.2px);
-  box-shadow: inset -1px 0 2px rgba(0,0,0,.25), 1px 0 3px rgba(0,0,0,.3);
-}
-/* gutter/spine shading cast across the pages nearest the binding */
-.spine-shade{
-  position:absolute;top:0;bottom:0;left:0;width:26%;
-  z-index:6;pointer-events:none;
-  background:linear-gradient(90deg, rgba(0,0,0,.35), transparent);
-}
-
-.book{position:relative;width:100%;height:100%;transform-style:preserve-3d;}
-.sheet{
-  position:absolute;inset:0;
-  transform-style:preserve-3d;
-  transform-origin:left center;
-  will-change:transform;
-}
-.sheet .face{
-  position:absolute;inset:0;
-  backface-visibility:hidden;
-  border-radius:1px 3px 3px 1px;
+  border-radius:2px;
+  box-shadow:0 30px 70px -20px rgba(0,0,0,.65);
   overflow:hidden;
-  background:#efe9da;
-  box-shadow:0 22px 50px -18px rgba(0,0,0,.65);
 }
-.sheet .face.back{transform:rotateY(180deg);}
-.sheet .face img{width:100%;height:100%;object-fit:cover;display:block;}
-/* fine paper-fiber texture over every page, multiplied over the photo/color */
-.sheet .face .paper-grain{
-  position:absolute;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity:.05;
-  mix-blend-mode:multiply;
-  pointer-events:none;
-}
-/* the moving fold-shadow that sweeps across whichever page is mid-turn,
-   giving the illusion of the paper bending rather than rotating flat */
-.sheet .face .fold-shadow{
-  position:absolute;inset:0;
-  background:linear-gradient(90deg, transparent 0%, rgba(0,0,0,.5) 50%, transparent 100%);
-  opacity:0;
-  pointer-events:none;
-}
-.sheet .face .page-caption{
-  position:absolute;left:0;right:0;bottom:0;padding:14px 16px;
-  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--cream);
-  background:linear-gradient(0deg,rgba(6,8,12,.85),transparent);
-}
-.cover-face{
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
-  padding:28px;
-  background:
-    linear-gradient(115deg, rgba(255,255,255,.09) 0%, transparent 18%),
-    linear-gradient(160deg,#182a46,#0a1120);
-}
-.cover-face .cover-photo{
-  position:absolute;
-  top:14%;left:14%;right:14%;
-  height:46%;
-  border:6px solid #f4efe3;
-  box-shadow:0 10px 24px rgba(0,0,0,.45);
-  background-size:cover;background-position:center;
-}
-.cover-face .cover-text{position:relative;z-index:2;text-align:center;}
-.cover-face .cover-text .eyebrow{margin-bottom:8px;}
-.cover-face .cover-text h3{
-  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
-  font-size:20px;color:var(--gold-bright);
-}
+.book-stage canvas{display:block;margin:0 auto;}
 .book-controls{margin-top:34px;display:flex;align-items:center;justify-content:center;gap:22px;}
 .book-btn{
   width:38px;height:38px;border-radius:50%;
@@ -502,14 +420,17 @@ img{display:block;max-width:100%;}
   <div class="scroll-cue"><span>Scroll to begin</span><span class="line"></span></div>
 </section>
 
-<!-- ============ REEL ============ -->
-<section class="reel-section">
-  <div class="reel-heading">
+<!-- ============ SLIDESHOW ============ -->
+<section class="slideshow-section">
+  <div class="slideshow-heading">
     <div class="eyebrow" style="text-align:center;">The Memory Reel</div>
     <h2>Moments We Won't Forget</h2>
   </div>
-  <div class="reel-pin">
-    <div class="reel-track" id="reelTrack"></div>
+  <div class="slideshow-stage" id="slideStage"></div>
+  <div class="slideshow-controls">
+    <button class="slide-btn" id="slidePrev" aria-label="Previous photo">‹</button>
+    <div class="slide-count" id="slideCount"></div>
+    <button class="slide-btn" id="slideNext" aria-label="Next photo">›</button>
   </div>
 </section>
 
@@ -519,23 +440,14 @@ img{display:block;max-width:100%;}
     <div class="eyebrow" style="text-align:center;">The Yearbook</div>
     <h2>Turn the Pages</h2>
   </div>
-  <div class="book-stage" id="bookStage">
-    <div class="book-shadow-under"></div>
-    <div class="book-tilt">
-      <div class="book-static-back"><span id="bookBackLabel"></span></div>
-      <div class="page-edges"></div>
-      <div class="book" id="book"></div>
-      <div class="spine-shade"></div>
-    </div>
-  </div>
+  <div class="book-stage" id="bookStage"></div>
   <div class="book-controls">
     <button class="book-btn" id="bookPrev" aria-label="Previous page">‹</button>
     <div class="book-count" id="bookCount"></div>
     <button class="book-btn" id="bookNext" aria-label="Next page">›</button>
   </div>
-  <div class="book-hint">Tap the book, or use the arrows, to turn a page</div>
+  <div class="book-hint">Drag a page, tap the book, or use the arrows to turn a page</div>
 </section>
-<audio id="pageFlipSound" preload="auto"></audio>
 
 <!-- ============ ARCHIVE ============ -->
 <section class="archive">
@@ -591,10 +503,25 @@ const CONFIG = {
 
   reel: [
     { num:"01", title:"Day One", caption:"The beginning we'll never forget", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png" },
-    { num:"02", title:"School Days", caption:"Laughter that never got old", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp" },
-    { num:"03", title:"Final Exams", caption:"Nerves that became a good story", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg" },
-    { num:"04", title:"Graduation Day", caption:"The moment we'd waited for", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185900/IMG_0032_vyy2e5.jpg" },
-    { num:"05", title:"The Ceremony", caption:"Joy no one will forget", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783138346/happy-students-graduation-ceremony_dt4ftd.jpg" },
+    { num:"02", title:"First Week", caption:"Finding our people", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp" },
+    { num:"03", title:"Field Trip", caption:"A day out of the classroom", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg" },
+    { num:"04", title:"Sports Day", caption:"Racing for bragging rights", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185900/IMG_0032_vyy2e5.jpg" },
+    { num:"05", title:"Science Fair", caption:"Our proudest project", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185899/IMG_0031_nsdn7a.jpg" },
+    { num:"06", title:"Talent Show", caption:"Braver than we thought", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185482/ChatGPT_Image_Jul_4_2026_at_08_13_36_PM_dinxtq.png" },
+    { num:"07", title:"Lunch Breaks", caption:"The best part of the day", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783381839/ChatGPT_Image_Jul_7_2026_at_02_50_28_AM_i4uxxl.png" },
+    { num:"08", title:"Late-Night Study", caption:"Coffee and shared notes", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783204729/ChatGPT_Image_Jul_4_2026_at_07_10_51_PM_hbsrhw.png" },
+    { num:"09", title:"School Play", caption:"Lines we still remember", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png" },
+    { num:"10", title:"Winter Break", caption:"Missing each other already", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp" },
+    { num:"11", title:"Prom Night", caption:"Dressed up and unforgettable", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg" },
+    { num:"12", title:"Senior Trip", caption:"Miles from home, closer than ever", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185900/IMG_0032_vyy2e5.jpg" },
+    { num:"13", title:"Final Exams", caption:"Nerves that became a good story", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185899/IMG_0031_nsdn7a.jpg" },
+    { num:"14", title:"Cap & Gown Fitting", caption:"It suddenly felt real", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185482/ChatGPT_Image_Jul_4_2026_at_08_13_36_PM_dinxtq.png" },
+    { num:"15", title:"Rehearsal Day", caption:"Practicing the walk", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783381839/ChatGPT_Image_Jul_7_2026_at_02_50_28_AM_i4uxxl.png" },
+    { num:"16", title:"Graduation Day", caption:"The moment we'd waited for", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783204729/ChatGPT_Image_Jul_4_2026_at_07_10_51_PM_hbsrhw.png" },
+    { num:"17", title:"The Ceremony", caption:"Joy no one will forget", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783138346/happy-students-graduation-ceremony_dt4ftd.jpg" },
+    { num:"18", title:"Family & Friends", caption:"They were with us every step", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png" },
+    { num:"19", title:"One Last Photo", caption:"Together, before we scatter", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp" },
+    { num:"20", title:"Until We Meet Again", caption:"This isn't goodbye", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg" },
   ],
 
   archiveTitle: "Pictures From Our Journey",
@@ -655,20 +582,114 @@ document.getElementById('heroYear').textContent = CONFIG.year;
 document.getElementById('heroTitle').innerHTML = CONFIG.heroTitle;
 document.getElementById('heroSub').textContent = CONFIG.heroSubtitle;
 
-const reelTrack = document.getElementById('reelTrack');
-CONFIG.reel.forEach(item=>{
-  const card = document.createElement('div');
-  card.className = 'reel-card';
-  card.innerHTML = `
-    <img src="${item.image}" alt="${item.title}">
-    <div class="frame-shade"></div>
-    <div class="cap">
-      <div class="num">${item.num}</div>
-      <h3>${item.title}</h3>
-      <p>${item.caption}</p>
-    </div>`;
-  reelTrack.appendChild(card);
-});
+/* =========================================================
+   SLIDESHOW — a moving filmstrip of cards. The strip glides
+   sideways on its own timer (not tied to page scroll), and the
+   visitor can drag/swipe it or use the arrow buttons any time.
+   ========================================================= */
+(function(){
+  const stage = document.getElementById('slideStage');
+  const prevBtn = document.getElementById('slidePrev');
+  const nextBtn = document.getElementById('slideNext');
+  const countEl = document.getElementById('slideCount');
+  const slides = CONFIG.reel;
+  const total = slides.length;
+
+  const track = document.createElement('div');
+  track.className = 'slide-track';
+  stage.appendChild(track);
+
+  slides.forEach(item=>{
+    const el = document.createElement('div');
+    el.className = 'slide';
+    el.innerHTML = `
+      <img src="${item.image}" alt="${item.title}" draggable="false">
+      <div class="frame-shade"></div>
+      <div class="cap">
+        <div class="num">${item.num}</div>
+        <h3>${item.title}</h3>
+        <p>${item.caption}</p>
+      </div>`;
+    track.appendChild(el);
+  });
+
+  const cardEls = Array.from(track.children);
+  let index = 0;
+  let timer = null;
+  let dragging = false, startX = 0, baseX = 0;
+
+  function cardStep(){
+    const gap = parseFloat(getComputedStyle(track).gap) || 20;
+    return cardEls[0].getBoundingClientRect().width + gap;
+  }
+
+  function currentX(){
+    const t = getComputedStyle(track).transform;
+    if(t === 'none') return 0;
+    return new DOMMatrixReadOnly(t).m41;
+  }
+
+  function render(animate){
+    const stageW = stage.getBoundingClientRect().width;
+    const cardW = cardEls[0].getBoundingClientRect().width;
+    const offset = (stageW - cardW) / 2 - index * cardStep();
+    track.style.transition = animate ? 'transform .65s cubic-bezier(.22,.68,.32,1)' : 'none';
+    track.style.transform = `translateX(${offset}px)`;
+    cardEls.forEach((el,i)=> el.classList.toggle('active', i===index));
+    countEl.textContent = `${index+1} / ${total}`;
+  }
+
+  function goTo(i){
+    index = (i + total) % total;
+    render(true);
+  }
+  function next(){ goTo(index+1); }
+  function prev(){ goTo(index-1); }
+
+  function startAuto(){
+    stopAuto();
+    timer = setInterval(next, 3200);
+  }
+  function stopAuto(){
+    if(timer){ clearInterval(timer); timer = null; }
+  }
+
+  nextBtn.addEventListener('click', ()=>{ next(); startAuto(); });
+  prevBtn.addEventListener('click', ()=>{ prev(); startAuto(); });
+
+  // Drag / swipe support — the strip follows the finger/cursor live,
+  // then snaps to the nearest card on release.
+  stage.addEventListener('pointerdown', e=>{
+    dragging = true;
+    stopAuto();
+    startX = e.clientX;
+    baseX = currentX();
+    track.style.transition = 'none';
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    track.style.transform = `translateX(${baseX + (e.clientX - startX)}px)`;
+  });
+  function endDrag(e){
+    if(!dragging) return;
+    dragging = false;
+    const delta = (e.clientX ?? startX) - startX;
+    const step = cardStep();
+    if(delta < -step * 0.18) next();
+    else if(delta > step * 0.18) prev();
+    else render(true);
+    startAuto();
+  }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointerleave', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  window.addEventListener('resize', ()=> render(false));
+
+  render(false);
+  startAuto();
+})();
 
 document.getElementById('archiveTitle').textContent = CONFIG.archiveTitle;
 document.getElementById('archiveSub').textContent = CONFIG.archiveSubtitle;
@@ -806,13 +827,13 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
     const folds = el.querySelectorAll('.fold-shadow');
     const from = dir === 1 ? 0 : -180;
     const to = dir === 1 ? -180 : 0;
-    el.style.zIndex = dir === 1 ? total + 2 : total + 2; // stay on top of the pile mid-turn
+    el.style.zIndex = total + 2; // stay on top of the pile mid-turn
     gsap.fromTo(el,
       { rotationY:from },
       {
         rotationY:to,
         z:0,
-        duration:0.95,
+        duration:1.05,
         ease:'power2.inOut',
         onUpdate:function(){
           const rot = gsap.getProperty(el,'rotationY');
@@ -833,10 +854,22 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
       });
   }
 
+  // The book's spine sits on its left edge, so once it's open the
+  // visible pages read as leaning left of the container's center.
+  // Nudge the whole stage right while open, and back when closed.
+  const OPEN_SHIFT = 26; // px — increase/decrease to taste
+  function shiftOpen(){
+    gsap.to(stage, { x: OPEN_SHIFT, duration:.7, ease:'power2.out' });
+  }
+  function shiftClosed(){
+    gsap.to(stage, { x: 0, duration:.7, ease:'power2.out' });
+  }
+
   function next(){
     if(animating || currentPage >= total) return;
     animating = true;
     playFlip();
+    if(currentPage === 0) shiftOpen();
     flipSheet(currentPage, 1, ()=>{ animating = false; });
     currentPage++;
     prevBtn.disabled = false;
@@ -847,6 +880,7 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
     if(animating || currentPage <= 0) return;
     animating = true;
     currentPage--;
+    if(currentPage === 0) shiftClosed();
     playFlip();
     flipSheet(currentPage, -1, ()=>{ animating = false; });
     prevBtn.disabled = currentPage === 0;
@@ -856,11 +890,92 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
 
   nextBtn.addEventListener('click', next);
   prevBtn.addEventListener('click', prev);
-  stage.addEventListener('click', e=>{
+
+  /* ---------------------------------------------------------
+     DRAG-TO-TURN — grab a page corner and pull it, the page
+     follows the pointer live (angle, lift and fold-shadow all
+     update every frame), and it settles open or closed
+     depending on how far it was pulled when released.
+     --------------------------------------------------------- */
+  function applyVisual(el, rotation, dir){
+    gsap.set(el, { rotationY: rotation });
+    const progress = Math.min(1, Math.abs(rotation) / 180);
+    const lift = Math.sin(progress * Math.PI) * 26;
+    gsap.set(el, { z: lift });
+    const showingBack = (dir === 1 && progress > 0.5) || (dir === -1 && progress < 0.5);
+    gsap.set(el.querySelectorAll('.fold-shadow'), { opacity: Math.sin(progress * Math.PI) * (showingBack ? 0.35 : 0.5) });
+  }
+
+  function settle(el, dir, complete, onDone){
+    const target = complete ? (dir === 1 ? -180 : 0) : (dir === 1 ? 0 : -180);
+    gsap.to(el, {
+      rotationY: target,
+      duration:.5,
+      ease:'power2.out',
+      onUpdate:function(){ applyVisual(el, gsap.getProperty(el,'rotationY'), dir); },
+      onComplete:function(){
+        gsap.set(el,{ z:0 });
+        gsap.set(el.querySelectorAll('.fold-shadow'),{opacity:0});
+        if(onDone) onDone();
+      }
+    });
+  }
+
+  let drag = null; // { el, dir, startRotation, startX, moved }
+
+  stage.addEventListener('pointerdown', e=>{
+    if(animating) return;
     const rect = stage.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    if(x > rect.width / 2) next(); else prev();
+    const onRight = (e.clientX - rect.left) > rect.width / 2;
+    let dir = null, idx = null;
+    if(onRight && currentPage < total){ dir = 1; idx = currentPage; }
+    else if(!onRight && currentPage > 0){ dir = -1; idx = currentPage - 1; }
+    if(dir === null) return;
+    const el = sheetEls[idx];
+    el.style.zIndex = total + 2;
+    drag = { el, dir, idx, startX:e.clientX, startRotation: dir===1 ? 0 : -180, moved:0, width: rect.width };
+    stage.setPointerCapture(e.pointerId);
   });
+
+  stage.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    const deltaX = e.clientX - drag.startX;
+    drag.moved = deltaX;
+    const rotation = Math.max(-180, Math.min(0, drag.startRotation + (deltaX / drag.width) * 180));
+    applyVisual(drag.el, rotation, drag.dir);
+  });
+
+  function endDrag(){
+    if(!drag) return;
+    const { el, dir, idx, moved } = drag;
+    drag = null;
+
+    // A tiny movement counts as a tap — flip the whole page normally.
+    if(Math.abs(moved) < 6){
+      gsap.set(el,{ rotationY: dir===1 ? 0 : -180, z:0 });
+      gsap.set(el.querySelectorAll('.fold-shadow'),{opacity:0});
+      if(dir === 1) next(); else prev();
+      return;
+    }
+
+    const rotation = gsap.getProperty(el,'rotationY');
+    const complete = dir === 1 ? rotation < -90 : rotation > -90;
+    animating = true;
+    if(complete) playFlip();
+    settle(el, dir, complete, ()=>{
+      animating = false;
+      if(complete){
+        if(dir === 1){ if(currentPage === 0) shiftOpen(); currentPage++; }
+        else { currentPage--; if(currentPage === 0) shiftClosed(); }
+      }
+      el.style.zIndex = idx < currentPage ? idx + 1 : total - idx;
+      prevBtn.disabled = currentPage === 0;
+      nextBtn.disabled = currentPage === total;
+      countEl.textContent = currentPage === 0 ? 'Closed' : `${currentPage} / ${total}`;
+    });
+  }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
 
   setStatic();
 })();
@@ -906,26 +1021,6 @@ gsap.timeline({defaults:{ease:'power3.out'}})
   .fromTo('.hero-title',{opacity:0,y:24},{opacity:1,y:0,duration:1},.35)
   .fromTo('.hero-sub',{opacity:0,y:16},{opacity:1,y:0,duration:.9},.55);
 gsap.set('#heroMedia',{scale:1.12});
-
-// Horizontal reel scrub — the film-reel effect
-function initReel(){
-  const track = document.getElementById('reelTrack');
-  const distance = track.scrollWidth - window.innerWidth + 160;
-  if(distance <= 0) return;
-  gsap.to(track,{
-    x: -distance,
-    ease:'none',
-    scrollTrigger:{
-      trigger:'.reel-pin',
-      start:'top top',
-      end:()=>'+=' + (distance + window.innerHeight),
-      scrub:1,
-      pin:true,
-      invalidateOnRefresh:true
-    }
-  });
-}
-window.addEventListener('load', initReel);
 
 // Archive photos reveal
 gsap.utils.toArray('.grid figure').forEach((fig,i)=>{
