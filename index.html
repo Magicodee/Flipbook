@@ -1,1525 +1,821 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Memories</title>
 
-    <title>Flipbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,600;1,800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="./style.css">
-
-    <!-- BOOTSTRAP ICONS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,500&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <style>
-      :root{
-        --ink:#152238;
-        --navy:#0d1622;
-        --gold:#c9a24d;
-        --gold-bright:#e8c983;
-        --cream:#FFFFFF;
-        --crimson:#8e1f28;
-        --line: rgba(201,162,77,0.35);
-      }
-      *{margin:0;padding:0;box-sizing:border-box;}
-      html,body{
-        background:var(--ink);
+<style>
+/* =========================================================
+   CONFIG-DRIVEN SITE — all client content lives in the CONFIG
+   object near the bottom of the file. Colors and fonts are
+   tokenized here for easy customization.
+   ========================================================= */
+:root{
+  --ink:#0d1420;
+  --ink-2:#152238;
+  --paper:#f4efe3;
+  --paper-line:#e3dac6;
+  --charcoal:#241f18;
+  --gold:#c9a24d;
+  --gold-bright:#eccd8c;
+  --crimson:#7c2128;
+  --cream:#f3efe4;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--ink);
   color:var(--cream);
-  font-family:'Tajawal','Cormorant Garamond',serif;
+  font-family:'Inter',sans-serif;
   overflow-x:hidden;
   width:100%;
-  min-height:100%;  
-      }
-      ::selection{background:var(--gold);color:#07080b;}
-    
-      /* ---------- STAGE ---------- */
-      #stage{
-        position:fixed;
-        inset:0;
-        width:100%;
-        height:100vh;
-        background:var(--ink);
-        overflow:hidden;
-        z-index:1000;
+}
+img{display:block;max-width:100%;}
+::selection{background:var(--gold);color:#0a0a0a;}
 
-      }
-    
-      /* Ken-burns photo layer */
-      .photo-wrap{
-        position:absolute;
-        inset:0;
-        overflow:hidden;
-      }
-      .photo{
-        position:absolute;
-        inset:0;
-        width:100%;
-        height:100%;
-        background-size:cover;
-        background-position:center 30%;
-        transform:scale(1.18);
-        filter:brightness(0.55) saturate(1.05) contrast(1.05);
-        will-change:transform, filter;
-      }
-      .photo-shade{
-        position:absolute;inset:0;
-        background:
-          radial-gradient(120% 90% at 50% 100%, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 55%, rgba(0,0,0,0) 70%),
-          linear-gradient(180deg, rgba(5,6,9,0.55) 0%, rgba(5,6,9,0.05) 30%, rgba(5,6,9,0.05) 60%, rgba(5,6,9,0.65) 100%);
-        pointer-events:none;
-      }
-    
-      /* Double-door curtain wipe (the signature reveal) */
-      .door{
-        position:absolute;
-        top:0; bottom:0;
-        width:50%;
-        background:
-          linear-gradient(180deg, #0a0c10 0%, #05060a 100%);
-        z-index:20;
-        box-shadow: 0 0 60px rgba(0,0,0,0.6);
-      }
-      .door::after{
-        content:"";
-        position:absolute;
-        top:0; bottom:0;
-        width:2px;
-        background:linear-gradient(180deg, transparent, var(--gold-bright) 20%, var(--gold-bright) 80%, transparent);
-        box-shadow:0 0 18px 2px rgba(232,201,131,0.7);
-      }
-      .door-l{ left:0; }
-      .door-l::after{ right:-1px; }
-      .door-r{ right:0; }
-      .door-r::after{ left:-1px; }
-    
-      /* Letterbox cinematic bars */
-      .bar{
-        position:absolute;
-        left:0; right:0;
-        height:14vh;
-        background:#020203;
-        z-index:30;
-      }
-      .bar-top{ top:0; transform:translateY(0); }
-      .bar-bottom{ bottom:0; transform:translateY(0); }
-      .bar::before{
-        content:"";
-        position:absolute;
-        left:0; right:0;
-        height:1px;
-        background:linear-gradient(90deg, transparent, var(--gold) 25%, var(--gold-bright) 50%, var(--gold) 75%, transparent);
-        opacity:0.7;
-      }
-      .bar-top::before{ bottom:0; }
-      .bar-bottom::before{ top:0; }
-    
-      /* Center seam line before doors open */
-      .seam{
-        position:absolute;
-        top:50%; left:50%;
-        width:0%;
-        height:1px;
-        background:linear-gradient(90deg, transparent, var(--gold-bright), transparent);
-        transform:translate(-50%,-50%);
-        z-index:25;
-        box-shadow:0 0 12px 1px rgba(232,201,131,0.8);
-      }
-    
-      /* Gold dust particles */
-      #particles{
-        position:absolute; inset:0;
-        z-index:22;
-        pointer-events:none;
-      }
-      .mote{
-        position:absolute;
-        width:3px; height:3px;
-        border-radius:50%;
-        background:var(--gold-bright);
-        opacity:0;
-        box-shadow:0 0 6px 1px rgba(232,201,131,0.8);
-      }
-    
-      /* Text block */
-      .stage-text{
-        position:absolute;
-        left:50%; bottom:19vh;
-        transform:translateX(-50%);
-        z-index:40;
-        text-align:center;
-        width:100%;
-        padding:0 24px;
-      }
-      .eyebrow{
-        font-family:'Cormorant Garamond', serif;
-        letter-spacing:0.55em;
-        font-size:clamp(11px,1.4vw,14px);
-        color:var(--gold-bright);
-        text-transform:uppercase;
-        opacity:0;
-        margin-bottom:14px;
-      }
-      .eyebrow span{ display:inline-block; }
-      .rule{
-        width:0;
-        height:1px;
-        background:var(--gold);
-        margin:0 auto 22px;
-      }
-      .headline{
-        font-family:'Playfair Display', serif;
-        font-weight:900;
-        font-style:italic;
-        font-size:clamp(30px, 6.2vw, 74px);
-        line-height:1.05;
-        color:var(--cream);
-        opacity:0;
-        letter-spacing:0.01em;
-        text-shadow:0 6px 40px rgba(0,0,0,0.6);
-    }
-      .headline b{
-        color:var(--gold-bright);
-        font-style:italic;
-        background:linear-gradient(90deg,#d9b465,#f2ddaa 40%,#c9a24d);
-        -webkit-background-clip:text;
-        background-clip:text;
-        -webkit-text-fill-color:transparent;
-      }
-    
-      /* CTA */
-      .enter-wrap{
-        margin-top:34px;
-        opacity:0;
-      }
-      .enter-btn{
-        position:relative;
-        display:inline-flex;
-        align-items:center;
-        gap:14px;
-        padding:16px 46px;
-        background:transparent;
-        border:1px solid var(--gold);
-        color:var(--cream);
-        font-family:'Tajawal';
-        font-weight:700;
-        font-size:15px;
-        letter-spacing:0.12em;
-        cursor:pointer;
-        overflow:hidden;
-        transition:color .4s ease, border-color .4s ease;
-      }
-      .enter-btn::before{
-        content:"";
-        position:absolute;
-        inset:0;
-        background:var(--gold);
-        transform:scaleX(0);
-        transform-origin:right;
-        transition:transform .5s cubic-bezier(.65,0,.35,1);
-        z-index:-1;
-      }
-      .enter-btn:hover{ color:#0a0a0a; }
-      .enter-btn:hover::before{ transform:scaleX(1); transform-origin:left; }
-      .enter-btn .arrow{ transition:transform .4s ease; }
-      .enter-btn:hover .arrow{ transform:translateX(-6px); }
-    
-      .corner-mark{
-        position:absolute;
-        z-index:35;
-        width:34px; height:34px;
-        border:1px solid var(--line);
-        opacity:0;
-      }
-      .cm-tl{ top:14vh; left:24px; border-left:none; border-top:none; }
-      .cm-tr{ top:14vh; right:24px; border-right:none; border-top:none; }
-      .cm-bl{ bottom:14vh; left:24px; border-left:none; border-bottom:none; }
-      .cm-br{ bottom:14vh; right:24px; border-right:none; border-bottom:none; }
-    
-      .rec-label{
-        position:absolute;
-        top:calc(14vh + 22px);
-        left:26px;
-        z-index:35;
-        display:flex;
-        align-items:center;
-        gap:8px;
-        font-family:'Tajawal';
-        font-size:11px;
-        letter-spacing:0.2em;
-        color:rgba(243,239,228,0.6);
-        opacity:0;
-      }
-      .rec-dot{
-        width:6px; height:6px; border-radius:50%;
-        background:var(--crimson);
-        box-shadow:0 0 8px 2px rgba(142,31,40,0.7);
-      }
-      .year-label{
-        position:absolute;
-        top:calc(14vh + 22px);
-        right:26px;
-        z-index:35;
-        font-family:'Cormorant Garamond';
-        font-size:13px;
-        letter-spacing:0.25em;
-        color:rgba(243,239,228,0.6);
-        opacity:0;
-      }
-    
-      /* -------- MAIN SITE PLACEHOLDER (what appears after intro) -------- */
-      #site{
-        position:relative;
-        min-height:100vh;
-        background:var(--ink);
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        text-align:center;
-        padding:60px 24px;
-      }
-      #site h2{
-        font-family:'Playfair Display';
-        font-style:italic;
-        font-weight:800;
-        color:var(--gold-bright);
-        font-size:clamp(22px,4vw,40px);
-        margin-bottom:16px;
-      }
-      #site p{
-        color:rgba(243,239,228,0.65);
-        font-size:16px;
-        max-width:520px;
-        line-height:1.9;
-      }
-      .skip-btn{
-        position:fixed;
-        bottom:20px; left:20px;
-        z-index:1001;
-        background:transparent;
-        border:1px solid rgba(243,239,228,0.25);
-        color:rgba(243,239,228,0.55);
-        font-family:'Tajawal';
-        font-size:11px;
-        letter-spacing:0.1em;
-        padding:8px 16px;
-        cursor:pointer;
-      }
-      .skip-btn:hover{ color:var(--gold-bright); border-color:var(--gold); }
-    
-      @media (max-width:640px){
-        .bar{ height:9vh; }
-        .cm-tl,.cm-tr{ top:9vh; }
-        .cm-bl,.cm-br{ bottom:9vh; }
-        .rec-label,.year-label{ top:calc(9vh + 16px); }
-        .stage-text{ bottom:13vh; }
-      }
-      /* Graduation background layer: a soft, page-wide veil of floating
-         emojis. It stays BEHIND the flipbook (true background), covering
-         the full page, light and see-through, never blocking clicks. */
-      .grad-bg-layer{
-    position:absolute;
-    inset:0;
-    overflow:hidden;
-    pointer-events:none;
-    z-index:0;
-  }
-  .grad-bg-layer .piece{
-    position:absolute;
-    top:-60px;
-    font-size:24px;
-    opacity:0;
-    will-change:transform, opacity;
-    animation-name:gradFall;
-    animation-timing-function:linear;
-    animation-iteration-count:infinite;
-    filter:drop-shadow(0 3px 5px rgba(0,0,0,0.12));
-  }
-  .grad-bg-layer .piece.small{ font-size:14px; filter:blur(0.6px) drop-shadow(0 2px 3px rgba(0,0,0,0.08)); }
-  .grad-bg-layer .piece.large{ font-size:34px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.14)); }
- 
-  @keyframes gradFall{
-    0%{
-      transform:translateY(0) translateX(0) rotate(0deg) scale(0.9);
-      opacity:0;
-    }
-    8%{ opacity:0.16; }
-    50%{
-      transform:translateY(50vh) translateX(var(--drift,20px)) rotate(180deg) scale(1);
-      opacity:0.2;
-    }
-    92%{ opacity:0.15; }
-    100%{
-      transform:translateY(115vh) translateX(calc(var(--drift,20px) * -1)) rotate(360deg) scale(0.9);
-      opacity:0;
-    }
-  }
- 
-  /* ورق كونفيتي مستطيل ملون (اختياري بجانب الإيموجي) */
-  .grad-bg-layer .confetti{
-    position:absolute;
-    top:-40px;
-    width:10px; height:16px;
-    border-radius:2px;
-    opacity:0;
-    animation-name:gradFall;
-    animation-timing-function:linear;
-    animation-iteration-count:infinite;
-  }
+.eyebrow{
+  font-family:'Cormorant Garamond',serif;
+  letter-spacing:0.5em;
+  font-size:12px;
+  color:var(--gold-bright);
+  margin-bottom:12px;
+}
+.serif{font-family:'Playfair Display',serif;}
 
-    </style>
-    </head>
-    <body>
+/* ---------------- HERO ---------------- */
+.hero{
+  position:relative;
+  height:100svh;
+  min-height:560px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  overflow:hidden;
+}
+.hero-media{
+  position:absolute;inset:0;
+  background-size:cover;
+  background-position:center 35%;
+  transform:scale(1.12);
+  filter:brightness(.5) saturate(1.05);
+}
+.hero-shade{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(180deg, rgba(9,11,16,.35) 0%, rgba(9,11,16,.15) 35%, rgba(9,11,16,.85) 100%);
+}
+.hero-grain{
+  position:absolute;inset:0;
+  opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+  pointer-events:none;
+}
+.hero-content{
+  position:relative;
+  z-index:3;
+  width:100%;
+  max-width:720px;
+  text-align:center;
+  padding:0 24px 12vh;
+}
+.hero-year{
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;
+  letter-spacing:.35em;
+  color:rgba(243,239,228,.65);
+  margin-bottom:18px;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-style:italic;
+  font-weight:800;
+  font-size:clamp(34px,7vw,78px);
+  line-height:1.06;
+  text-shadow:0 10px 40px rgba(0,0,0,.55);
+}
+.hero-title em{
+  font-style:italic;
+  background:linear-gradient(90deg,#d9b465,#f2ddaa 45%,#c9a24d);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sub{
+  margin-top:18px;
+  font-size:15px;
+  color:rgba(243,239,228,.7);
+  line-height:1.9;
+}
+.scroll-cue{
+  position:absolute;
+  bottom:34px;left:50%;
+  transform:translateX(-50%);
+  z-index:3;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:.25em;color:rgba(243,239,228,.55);
+}
+.scroll-cue .line{width:1px;height:34px;background:linear-gradient(180deg,var(--gold-bright),transparent);animation:pull 1.8s ease-in-out infinite;}
+@keyframes pull{0%,100%{transform:scaleY(.6);opacity:.4;}50%{transform:scaleY(1);opacity:1;}}
 
-    <div id="stage">
-      <div class="photo-wrap">
-        <div class="photo">
-        <img crossorigin="anonymous" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783204729/ChatGPT_Image_Jul_4_2026_at_07_10_51_PM_hbsrhw.png">  
-        </div>
-        <div class="photo-shade"></div>
-      </div>
-    
-      <div id="particles"></div>
-    
-      <div class="seam"></div>
-      <div class="door door-l"></div>
-      <div class="door door-r"></div>
-    
-      <div class="bar bar-top"></div>
-      <div class="bar bar-bottom"></div>
-    
-      <div class="corner-mark cm-tl"></div>
-      <div class="corner-mark cm-tr"></div>
-      <div class="corner-mark cm-bl"></div>
-      <div class="corner-mark cm-br"></div>
-    
-      <div class="year-label">2026-2027</div>
-    
-      <div class="stage-text">
-        <div class="rule"></div>
-        <h1 class="headline">Our<b> Graduation</b></h1>
-        <div class="enter-wrap">
-          <button class="enter-btn" id="enterBtn">
-            <span>Click to see</span>
-            <span class="arrow">←</span>
-          </button>
-        </div>
-      </div>
-    </div>
-        
-    <script>
-    (function(){
-      // build gold dust particles (fewer on small/mobile screens for smoother performance)
-      const field = document.getElementById('particles');
-      const N = window.matchMedia('(max-width:640px)').matches ? 12 : 22;
-      const motes = [];
-      for(let i=0;i<N;i++){
-        const m = document.createElement('div');
-        m.className = 'mote';
-        const x = Math.random()*100;
-        const y = 55 + Math.random()*45;
-        m.style.left = x+'%';
-        m.style.top = y+'%';
-        const size = 2 + Math.random()*3;
-        m.style.width = size+'px';
-        m.style.height = size+'px';
-        field.appendChild(m);
-        motes.push(m);
-      }
-    
-      function floatMotes(){
-        motes.forEach(m=>{
-          gsap.to(m,{
-            y: -(80+Math.random()*160),
-            x: (Math.random()*60-30),
-            opacity: 0,
-            duration: 4+Math.random()*4,
-            delay: Math.random()*3,
-            ease:'power1.out',
-            onStart:function(){ gsap.set(m,{opacity:0.15+Math.random()*0.6}); },
-            onComplete:function(){
-              gsap.set(m,{y:0,x:0,top:(55+Math.random()*45)+'%',left:(Math.random()*100)+'%'});
-              floatOne(m);
-            }
-          });
-        });
-      }
-      function floatOne(m){
-        gsap.to(m,{
-          y: -(80+Math.random()*160),
-          x:(Math.random()*60-30),
-          opacity:0,
-          duration:4+Math.random()*4,
-          ease:'power1.out',
-          onStart:function(){ gsap.set(m,{opacity:0.15+Math.random()*0.6}); },
-          onComplete:function(){
-            gsap.set(m,{y:0,x:0,top:(55+Math.random()*45)+'%',left:(Math.random()*100)+'%'});
-            floatOne(m);
-          }
-        });
-      }
-    
-      const tl = gsap.timeline({defaults:{ease:'power3.out'}});
-    
-      // 1. seam draws
-      tl.to('.seam',{width:'70%',duration:0.9,ease:'power2.inOut'})
-        .to('.seam',{opacity:0,duration:0.25},'+=0.05')
-    
-      // 2. letterbox bars slide to frame position
-        .fromTo('.bar-top',{yPercent:-100},{yPercent:0,duration:0.7,ease:'power4.out'},'-=0.1')
-        .fromTo('.bar-bottom',{yPercent:100},{yPercent:0,duration:0.7,ease:'power4.out'},'<')
-    
-      // 3. corner marks + labels fade
-        .to(['.corner-mark','.rec-label','.year-label'],{opacity:1,duration:0.6,stagger:0.05},'-=0.3')
-    
-      // 4. doors open (the reveal)
-        .to('.door-l',{xPercent:-100,duration:1.4,ease:'power4.inOut'},'+=0.05')
-        .to('.door-r',{xPercent:100,duration:1.4,ease:'power4.inOut'},'<')
-    
-      // 5. photo ken-burns continues, shade breathes in
-        .to('.photo',{scale:1.0,duration:3.2,ease:'power2.out'},'<')
-    
-      // particles start drifting as doors open
-        .call(floatMotes,null,'<0.2')
-    
-      // 6. text reveal
-        .to('.eyebrow',{opacity:1,duration:0.7},'-=1.6')
-        .to('.rule',{width:'120px',duration:0.7,ease:'power2.out'},'<')
-        .fromTo('.headline',{opacity:0,y:26},{opacity:1,y:0,duration:0.9},'-=0.3')
-        .to('.enter-wrap',{opacity:1,duration:0.7},'-=0.3');
-    
-      // Enter site: retract everything, scroll down / fade stage
-      function enterSite(){
-        const t2 = gsap.timeline();
-        t2.to('.stage-text',{opacity:0,y:-16,duration:0.4})
-          .to(['.bar-top'],{yPercent:-100,duration:0.7,ease:'power4.inOut'},'<')
-          .to(['.bar-bottom'],{yPercent:100,duration:0.7,ease:'power4.inOut'},'<')
-          .to('.photo',{scale:1.12,filter:'brightness(0.3)',duration:0.9,ease:'power2.in'},'<')
-          .to('#stage',{opacity:0,duration:0.6,ease:'power2.in'},'-=0.3')
-          .set('#stage',{display:'none'})
-          .call(()=>{ document.getElementById('site').scrollIntoView({behavior:'smooth'}); });
-      }
-    
-      document.getElementById('enterBtn').addEventListener('click', enterSite);
-      document.getElementById('skipBtn').addEventListener('click', ()=>{
-        tl.progress(1);
-        enterSite();
-      });
-    })();
-    </script>
+/* ---------------- REEL (horizontal scroll-scrub timeline) ---------------- */
+.reel-section{
+  position:relative;
+  background:var(--ink-2);
+  padding-top:110px;
+}
+.reel-heading{
+  text-align:center;
+  padding:0 24px 60px;
+}
+.reel-heading h2{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
+  font-size:clamp(26px,4.4vw,44px);
+}
+.reel-pin{
+  height:100svh;
+  display:flex;
+  align-items:center;
+  overflow:hidden;
+  position:relative;
+}
+.reel-pin::before,.reel-pin::after{
+  content:"";
+  position:absolute;top:0;bottom:0;width:70px;z-index:5;pointer-events:none;
+}
+.reel-pin::before{right:0;background:linear-gradient(270deg,var(--ink-2),transparent);}
+.reel-pin::after{left:0;background:linear-gradient(90deg,var(--ink-2),transparent);}
+.reel-track{
+  display:flex;
+  gap:34px;
+  padding:0 8vw;
+  will-change:transform;
+}
+.reel-card{
+  position:relative;
+  flex:0 0 auto;
+  width:min(66vw,360px);
+  height:min(78vh,460px);
+  border-radius:2px;
+  overflow:hidden;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.6);
+}
+.reel-card img{width:100%;height:100%;object-fit:cover;filter:saturate(1.03) contrast(1.02);}
+.reel-card .frame-shade{
+  position:absolute;inset:0;
+  background:linear-gradient(0deg,rgba(6,8,12,.88) 0%,rgba(6,8,12,.05) 46%);
+}
+.reel-card .cap{
+  position:absolute;left:0;right:0;bottom:0;padding:22px 22px 20px;
+}
+.reel-card .cap .num{
+  font-family:'Cormorant Garamond',serif;color:var(--gold-bright);font-size:12px;letter-spacing:.3em;margin-bottom:6px;
+}
+.reel-card .cap h3{
+  font-family:'Playfair Display',serif;font-style:italic;font-size:20px;
+}
+.reel-card .cap p{
+  margin-top:6px;font-size:12.5px;color:rgba(243,239,228,.65);line-height:1.7;
+}
 
-<div id="site">
-  <div class="video-hero">
-    <iframe
-      class="video-hero-embed"
-      src="https://player.cloudinary.com/embed/?cloud_name=df5qqg0v0&public_id=lv_0_20260706184458_nilmzh&player[autoplay]=true&player[muted]=true&player[loop]=true&player[controls]=false&player[bigPlayButton]=false&player[autoplayMode]=always&player[fluid]=true"
-      frameborder="0"
-      loading="lazy"
-      allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-      allowfullscreen>
-    </iframe>
-    <div class="video-hero-shade"></div>
-    <div class="video-hero-text">
-      <span class="video-hero-eyebrow">A Story Worth Keeping</span>
-      <h2 class="video-hero-title">Our <b>memories</b> turned into a book</h2>
-    </div>
+/* ---------------- YEARBOOK (JS-driven flipbook) ---------------- */
+.book-section{
+  background:var(--ink);
+  padding:120px 24px 130px;
+  text-align:center;
+}
+.book-heading{margin-bottom:56px;}
+.book-heading h2{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
+  font-size:clamp(26px,4.4vw,44px);
+}
+.book-stage{
+  perspective:2400px;
+  width:min(88vw,340px);
+  height:min(72vh,460px);
+  margin:0 auto;
+  position:relative;
+}
+.book-static-back{
+  position:absolute;inset:0;
+  border-radius:2px;
+  background:linear-gradient(160deg,#1c2f4d,#0a1120);
+  box-shadow:0 20px 50px -18px rgba(0,0,0,.6);
+  display:flex;align-items:center;justify-content:center;
+  z-index:0;
+}
+.book-static-back span{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  letter-spacing:.2em;font-size:12px;color:rgba(243,239,228,.4);
+}
+.book{position:relative;width:100%;height:100%;}
+.sheet{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transform-origin:left center;
+  transition:transform .9s cubic-bezier(.65,0,.35,1);
+}
+.sheet .face{
+  position:absolute;inset:0;
+  backface-visibility:hidden;
+  border-radius:2px;
+  overflow:hidden;
+  box-shadow:0 20px 50px -18px rgba(0,0,0,.6);
+  background:#111;
+}
+.sheet .face.back{transform:rotateY(180deg);}
+.sheet .face img{width:100%;height:100%;object-fit:cover;display:block;}
+.sheet .face .page-caption{
+  position:absolute;left:0;right:0;bottom:0;padding:14px 16px;
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--cream);
+  background:linear-gradient(0deg,rgba(6,8,12,.85),transparent);
+}
+.cover-face{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding:28px;
+}
+.cover-face .cover-text{position:relative;z-index:2;text-align:center;}
+.cover-face .cover-text .eyebrow{margin-bottom:8px;}
+.cover-face .cover-text h3{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
+  font-size:20px;color:var(--gold-bright);
+}
+.book-controls{margin-top:34px;display:flex;align-items:center;justify-content:center;gap:22px;}
+.book-btn{
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid rgba(201,162,77,.5);
+  background:transparent;color:var(--gold-bright);
+  font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .3s;
+}
+.book-btn:hover{background:rgba(201,162,77,.15);}
+.book-btn:disabled{opacity:.25;cursor:default;}
+.book-count{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:.15em;color:rgba(243,239,228,.6);min-width:70px;}
+.book-hint{margin-top:16px;font-size:11.5px;letter-spacing:.03em;color:rgba(243,239,228,.4);}
+
+/* ---------------- ARCHIVE (paper gallery grid) ---------------- */
+.archive{
+  background:var(--paper);
+  color:var(--charcoal);
+  padding:110px 24px 100px;
+}
+.archive-heading{
+  max-width:640px;margin:0 auto 56px;text-align:center;
+}
+.archive-heading .eyebrow{color:var(--crimson);}
+.archive-heading h2{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
+  font-size:clamp(26px,4.4vw,44px);color:var(--charcoal);
+}
+.archive-heading p{
+  margin-top:14px;color:#5a5142;font-size:14.5px;line-height:1.9;
+}
+.grid{
+  max-width:1080px;margin:0 auto;
+  columns:3 220px;
+  column-gap:18px;
+}
+@media (max-width:720px){.grid{columns:2 150px;}}
+.grid figure{
+  break-inside:avoid;
+  margin:0 0 18px;
+  background:#fff;
+  padding:10px 10px 34px;
+  border:1px solid var(--paper-line);
+  box-shadow:0 12px 28px -14px rgba(36,31,24,.25);
+  cursor:pointer;
+  transition:transform .35s ease;
+}
+.grid figure:hover{transform:translateY(-4px) rotate(-.4deg);}
+.grid figure img{width:100%;}
+.grid figcaption{
+  font-family:'Cormorant Garamond',serif;
+  font-size:12.5px;
+  text-align:center;
+  margin-top:10px;
+  color:#7a6f5c;
+}
+
+/* ---------------- VOICES (quotes) ---------------- */
+.voices{
+  background:var(--ink);
+  padding:110px 24px;
+  text-align:center;
+}
+.voices .eyebrow{margin:0 auto 26px;}
+.quote-wrap{max-width:680px;margin:0 auto;min-height:170px;position:relative;}
+.quote{
+  position:absolute;inset:0;
+  opacity:0;
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:clamp(19px,2.6vw,27px);
+  line-height:1.6;
+}
+.quote.active{position:relative;opacity:1;}
+.quote .who{
+  display:block;margin-top:20px;
+  font-family:'Inter';font-style:normal;font-size:13px;letter-spacing:.1em;color:var(--gold-bright);
+}
+.dots{display:flex;gap:8px;justify-content:center;margin-top:38px;}
+.dots span{width:6px;height:6px;border-radius:50%;background:rgba(243,239,228,.25);cursor:pointer;transition:background .3s;}
+.dots span.active{background:var(--gold-bright);}
+
+/* ---------------- CLOSING (seal) ---------------- */
+.closing{
+  position:relative;
+  background:var(--ink-2);
+  padding:130px 24px 150px;
+  text-align:center;
+  overflow:hidden;
+}
+.seal{
+  width:118px;height:118px;
+  margin:0 auto 40px;
+  border-radius:50%;
+  border:1.5px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  transform:scale(.4) rotate(-25deg);
+  opacity:0;
+}
+.seal::before{
+  content:"";position:absolute;inset:8px;border:1px solid rgba(201,162,77,.5);border-radius:50%;
+}
+.seal span{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;color:var(--gold-bright);font-size:13px;letter-spacing:.05em;text-align:center;line-height:1.3;
+}
+.closing h2{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
+  font-size:clamp(28px,5vw,52px);
+  max-width:640px;margin:0 auto;line-height:1.3;
+}
+.closing p{
+  margin:22px auto 0;max-width:480px;color:rgba(243,239,228,.65);font-size:14.5px;line-height:1.9;
+}
+.signatures{
+  margin-top:46px;display:flex;flex-wrap:wrap;gap:10px 26px;justify-content:center;
+}
+.signatures span{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:rgba(243,239,228,.75);
+}
+
+/* ---------------- AUDIO PILL ---------------- */
+.audio-pill{
+  position:fixed;
+  right:20px;bottom:20px;
+  z-index:200;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(13,20,32,.7);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(201,162,77,.4);
+  border-radius:40px;
+  padding:8px 8px 8px 16px;
+  cursor:pointer;
+}
+.audio-pill .dot{
+  width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,var(--gold-bright),var(--gold) 70%);
+  display:flex;align-items:center;justify-content:center;
+  flex:0 0 auto;
+}
+.audio-pill svg{width:13px;height:13px;fill:#12100a;}
+.audio-pill .bars{display:flex;align-items:flex-end;gap:2px;height:14px;}
+.audio-pill .bars i{
+  width:2px;background:var(--gold-bright);border-radius:1px;
+  animation:bar 1s ease-in-out infinite;
+  height:4px;
+}
+.audio-pill.playing .bars i{animation-play-state:running;}
+.audio-pill:not(.playing) .bars i{animation-play-state:paused;height:3px;}
+.audio-pill .bars i:nth-child(1){animation-delay:-.7s;}
+.audio-pill .bars i:nth-child(2){animation-delay:-.4s;}
+.audio-pill .bars i:nth-child(3){animation-delay:-.1s;}
+@keyframes bar{0%,100%{height:3px;}50%{height:13px;}}
+.audio-pill .label{font-size:11px;letter-spacing:.05em;color:rgba(243,239,228,.75);}
+
+/* ---------------- LIGHTBOX ---------------- */
+.lightbox{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(6,8,12,.92);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+  padding:30px;
+}
+.lightbox.open{opacity:1;pointer-events:auto;}
+.lightbox img{max-width:min(90vw,720px);max-height:82vh;box-shadow:0 40px 80px rgba(0,0,0,.6);}
+.lightbox-close{
+  position:absolute;top:22px;left:22px;
+  width:38px;height:38px;border-radius:50%;
+  border:1px solid rgba(243,239,228,.35);
+  color:var(--cream);background:transparent;font-size:18px;cursor:pointer;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-media" id="heroMedia"></div>
+  <div class="hero-shade"></div>
+  <div class="hero-grain"></div>
+  <div class="hero-content">
+    <div class="hero-year" id="heroYear"></div>
+    <h1 class="hero-title" id="heroTitle"></h1>
+    <p class="hero-sub" id="heroSub"></p>
   </div>
+  <div class="scroll-cue"><span>Scroll to begin</span><span class="line"></span></div>
+</section>
+
+<!-- ============ REEL ============ -->
+<section class="reel-section">
+  <div class="reel-heading">
+    <div class="eyebrow" style="text-align:center;">The Memory Reel</div>
+    <h2>Moments We Won't Forget</h2>
+  </div>
+  <div class="reel-pin">
+    <div class="reel-track" id="reelTrack"></div>
+  </div>
+</section>
+
+<!-- ============ YEARBOOK (flipbook) ============ -->
+<section class="book-section">
+  <div class="book-heading">
+    <div class="eyebrow" style="text-align:center;">The Yearbook</div>
+    <h2>Turn the Pages</h2>
+  </div>
+  <div class="book-stage" id="bookStage">
+    <div class="book-static-back"><span id="bookBackLabel"></span></div>
+    <div class="book" id="book"></div>
+  </div>
+  <div class="book-controls">
+    <button class="book-btn" id="bookPrev" aria-label="Previous page">‹</button>
+    <div class="book-count" id="bookCount"></div>
+    <button class="book-btn" id="bookNext" aria-label="Next page">›</button>
+  </div>
+  <div class="book-hint">Tap the book, or use the arrows, to turn a page</div>
+</section>
+<audio id="pageFlipSound" preload="auto"></audio>
+
+<!-- ============ ARCHIVE ============ -->
+<section class="archive">
+  <div class="archive-heading">
+    <div class="eyebrow">The Archive</div>
+    <h2 id="archiveTitle"></h2>
+    <p id="archiveSub"></p>
+  </div>
+  <div class="grid" id="galleryGrid"></div>
+</section>
+
+<!-- ============ VOICES ============ -->
+<section class="voices">
+  <div class="eyebrow">In Their Words</div>
+  <div class="quote-wrap" id="quoteWrap"></div>
+  <div class="dots" id="quoteDots"></div>
+</section>
+
+<!-- ============ CLOSING ============ -->
+<section class="closing">
+  <div class="seal" id="seal"><span id="sealText"></span></div>
+  <h2 id="closingTitle"></h2>
+  <p id="closingSub"></p>
+  <div class="signatures" id="signatures"></div>
+</section>
+
+<!-- ============ AUDIO PILL ============ -->
+<div class="audio-pill" id="audioPill">
+  <div class="dot">
+    <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none;"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+  </div>
+  <div class="bars"><i></i><i></i><i></i></div>
+  <div class="label" id="audioLabel"></div>
+</div>
+<audio id="audio" preload="none"></audio>
+
+<!-- ============ LIGHTBOX ============ -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">×</button>
+  <img id="lightboxImg" src="" alt="">
 </div>
 
-<style>
-.video-hero{
- position: relative; 
-} 
-.video-hero-embed{
-width: 2000px;
-height: 500px;
-margin: auto;
-box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.15);
-filter: blur(3px);
-}
-.video-hero-text{
-position:absolute;
-transform: translateX(-50%);
-z-index: 10;
-text-align: center;
-width: 100%;
-bottom: 200px;
-left: 50%;
-font-weight: bold;
-text-shadow:
-    0 0 4px #ffffff,
-    0 0 10px #ffffff,
-    0 0 30px #ffffff,
-    0 0 60px #ffffff,
-    0 0 100px #ffffff,
-    0 0 100px #ffffff;
-    color: #ffffff;
-}
-
-.video-hero-eyebrow{
- font-size: 20px; 
-}
-.video-hero-title{
- color:#ffff; 
-@media (max-width: 480px){
-  .video-hero-embed{ aspect-ratio: 9 / 16; min-height: 280px; width: 100%; }
-  .video-hero-text{ bottom: 8%; }
-}
- </style>
-
-
-    <main style="position:relative;">
-
-        <!-- Graduation celebration background: a light veil of floating
-             emojis that starts right below the video and sits behind the
-             flipbook. Purely decorative and click-through. -->
-        <div class="grad-bg-layer" id="gradBgLayer"></div>
-
-        <!-- TOP CONTAINER -->
-        <div class="fixed top-0 left-0 w-full h-auto p-4 flex flex-row justify-end items-center" style="z-index:6;">
-          <!-- Toggle mode button -->
-          <label class="swap swap-rotate">
-            <input type="checkbox" class="theme-controller" value="black" />
-            
-        </label>
-    </div>
-
-    <!-- ✅ الفريم ده هو اللي بيلف الكتاب + الجرامافون مع بعض، وبيتقفل صح -->
-    <div class="book-and-player">
-
-        <!-- FLIP BOOK -->
-        <input type="checkbox" id="cover_checkbox">
-        <input type="checkbox" id="page1_checkbox">
-        <input type="checkbox" id="page2_checkbox">
-        <input type="checkbox" id="page3_checkbox">
-        <input type="checkbox" id="page4_checkbox">
-        <input type="checkbox" id="page5_checkbox">
-
-        <div id="flip_book">
-            <div class="front_cover">
-                <label for="cover_checkbox" id="cover">
-                <img src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783381839/ChatGPT_Image_Jul_7_2026_at_02_50_28_AM_i4uxxl.png" crossorigin="anonymous" loading="lazy" decoding="async">
-                </label>
-                <h2 class="cover-school-name">your school/university name</h2>
-            </div>
-            <style>
-#cover img{
-width: 218px;
-margin-left: 70px;
-margin-top: 115px;
-}
-.front_cover .cover-school-name{
-    position: relative;
-    z-index: 6;
-    margin-top: 150px;
-    padding: 0 24px;
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    text-align: center;
-    color: #e8c983;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.55);
-    pointer-events: none;
-}
-</style>
-
-
-            <div class="page" id="page1">
-                <div class="front_page">
-                    <label for="page1_checkbox"></label>
-                    <img class="front_content"
-                    crossorigin="anonymous"
-                    loading="lazy" decoding="async"
-                    src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png">
-                </div>
-
-                <div class="back_page">
-                    <label for="page1_checkbox"></label>
-                    <img class="back_content"
-                    crossorigin="anonymous"
-                    loading="lazy" decoding="async"
-                    src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783138346/happy-students-graduation-ceremony_dt4ftd.jpg">                </div>
-            </div>
-
-            <div class="page" id="page2">
-                <div class="front_page">
-                    <label for="page2_checkbox"></label>
-                    <img class="front_content" crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp" alt="Front content">
-                </div>
-
-                <div class="back_page">
-                    <label for="page2_checkbox"></label>
-                    
-                    <img class="back_content" crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg" alt="Back content">
-                </div>
-            </div>
-
-            <div class="page" id="page3">
-                <div class="front_page">
-                    <label for="page3_checkbox"></label>
-                    <img class="front_content" crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185900/IMG_0032_vyy2e5.jpg" alt="Front content">
-                </div>
-
-                <div class="back_page">
-                    <label for="page3_checkbox"></label>
-                    
-                    <img class="back_content" crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185899/IMG_0031_nsdn7a.jpg" alt="Back content">
-                </div>
-            </div>
-
-            <div class="page" id="page4">
-                <div class="front_page">
-                    <label for="page4_checkbox"></label>
-                  
-                    <img class="front_content" crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783138346/happy-students-graduation-ceremony_dt4ftd.jpg" alt="Front content">
-                </div>
-
-                <div class="back_page">
-                    <label for="page4_checkbox"></label>
-        
-                    <img class="back_content" crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg" alt="Back content">
-                </div>
-            </div>
-
-            <div class="page" id="page5">
-                <div class="front_page">
-                    <label for="page5_checkbox"></label>
-                   
-                    <img class="front_content" crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png" alt="Front content">
-                </div>
-
-                <div class="back_page">
-                    <label for="page5_checkbox"></label>
-                  
-                    <img class="back_content"  crossorigin="anonymous" loading="lazy" decoding="async" src="https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185482/ChatGPT_Image_Jul_4_2026_at_08_13_36_PM_dinxtq.png" alt="Back content">
-                </div>
-            </div>
-          
-            <div class="back_cover"></div>
-        </div>
-
-        <!-- ✅ الجرامافون دلوقتي جوه نفس الفريم بتاع الكتاب، تحته مباشرة، وماشي في الـ flow الطبيعي للصفحة -->
-        <div class="player-stage" id="playerStage">
-          <button class="close-btn" id="closeBtn" aria-label="إغلاق المشغل">×</button>
-
-          <div class="gramo-base">
-            <div class="plinth"></div>
-            <div class="vinyl" id="vinyl">
-              <div class="vinyl-label"><span>Seniors</span></div>
-              <div class="vinyl-hole"></div>
-            </div>
-            <div class="tonearm-pivot"></div>
-            <div class="tonearm" id="tonearm">
-              <div class="rod"></div>
-              <div class="head"></div>
-            </div>
-          </div>
-
-          <button class="play-btn" id="playBtn" aria-label="تشغيل">
-            <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none;"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-          </button>
-
-          <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
-
-          <!-- غيّر src ده لمسار الأغنية بتاعتك -->
-          <audio id="audio" preload="none" src="https://res.cloudinary.com/df5qqg0v0/video/upload/v1783388056/e0805c036cd762a9d08eeaf2ff315b95_4_pok7nc.mp3"></audio>
-
-          <!-- صوت تقليب الصفحة: صوت مُولَّد جاهز، مدمج هنا مباشرة فمفيش لينكات خارجية -->
-          <audio id="pageFlipSound" src="https://res.cloudinary.com/df5qqg0v0/video/upload/v1783388054/Paper_turn_sound_FX-_Royalty_Free_HD_-_Gaming_Sounds_Movie_FX_mfmsxn.mp3" preload="auto"></audio>
-        </div>
-
-    </div>
-    <!-- ✅ قفل صحيح للفريم بتاع الكتاب + الجرامافون -->
-
-        <!-- BOTTOM CONTAINER -->
-        <div class="fixed left-0 bottom-0 w-full h-auto p-4 flex flex-row justify-between items-center" style="z-index:6;"></div>
-    </main>
-
-    <style>
-/* DAISYUI */
-@plugin "daisyui" {
-    themes: light --default, black;
-}
-
-:root:has(input.theme-controller[value="black"]:checked) .tooltip,
-:root:has(input.theme-controller[value="black"]:checked) .tooltip::before {
-    border-radius: 0.25rem !important;
-}
-
-.tooltip::after {
-    display: none !important;
-}
-
-/* GENERAL */
-body {
-  width: 100%;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-input {
-    display: none;
-}
-
-/* ✅ الفريم الجديد بتاع الكتاب + الجرامافون: عمودي، في النص، والجرامافون بيتحط تحت الكتاب مباشرة كجزء طبيعي من الصفحة */
-.book-and-player{
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-    padding: 20px 0 40px;
-}
-
-/* FLIP BOOK */
-#flip_book {
-    width: 382px;
-    height: 538px;
-    position: relative;
-    transition-duration: 1s;
-    perspective: 2000px;
-}
-
-
-
-.front_cover,
-.back_cover {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border-radius: 2.5px 5px 5px 2.5px;
-    background-image: url(./assets/images/flip_book_edge_shading.webp);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-color: #060657;
-    box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.15);}
-
-.front_cover {
-    position: absolute;
-    cursor: pointer;
-    transform-origin: center left;
-    transition: transform 0.5s;
-    z-index: 99;
-}
-
-.front_cover label {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    cursor: pointer;
-}
-
-
-.front_cover,
-.back_cover{
-  overflow:hidden; /* عشان اللمعة ميطلعش برة حواف الغلاف */
-}
-/* 1) لمعة ثابتة (Highlight) - ضوء منعكس من فوق يسار زي أي سطح لامع حقيقي */
-.front_cover::before,
-.back_cover::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:3;
-  pointer-events:none;
-  background:
-    linear-gradient(135deg,
-      rgba(255,255,255,0.35) 0%,
-      rgba(255,255,255,0.12) 18%,
-      rgba(255,255,255,0) 35%,
-      rgba(0,0,0,0) 65%,
-      rgba(0,0,0,0.18) 100%);
-  mix-blend-mode:overlay;
-}
-
-/* 2) خط لمعة متحرك (Sheen sweep) - شعاع بيعدي قطريًا كل شوية */
-.front_cover::after,
-.back_cover::after{
-  content:"";
-  position:absolute;
-  top:-150%;
-  left:-60%;
-  width:40%;
-  height:400%;
-  z-index:4;
-  pointer-events:none;
-  background:linear-gradient(
-    90deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0.05) 35%,
-    rgba(255,255,255,0.55) 50%,
-    rgba(255,255,255,0.05) 65%,
-    rgba(255,255,255,0) 100%
-  );
-  transform:rotate(20deg);
-  mix-blend-mode:overlay;
-  animation:coverSheen 6s ease-in-out infinite;
-}
-
-/* الغلاف التاني ياخد تايمنج مختلف شوية عشان الحركة متبقاش متطابقة 100% */
-.back_cover::after{
-  animation-delay:2.4s;
-}
-
-@keyframes coverSheen{
-  0%   { left:-60%; }
-  35%  { left:130%; }
-  100% { left:130%; }
-}
-
-
-
-
-
-
-
-
-:root{
-  --flip-duration: 1.2s; /* ⚠️ غيّرها بنفس مدة تدوير الصفحة (rotateY) اللي عندك بالظبط */
-}
-
-/* الظل المتحرك اللي بيدي إحساس إن الورقة بتتلف مش بتقلب flat */
-.front_page::after,
-.back_page::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  z-index:5;
-  background:linear-gradient(90deg,
-    transparent 30%,
-    rgba(0,0,0,0.55) 50%,
-    transparent 70%);
-  background-size:300% 100%;
-  background-position:0% 0%;
-  mix-blend-mode:multiply;
-  transition:background-position var(--flip-duration) ease-in-out;
-}
-
-/* ظل الكعب/العمود الفقري للكتاب في النص - بيدي إحساس التجليد */
-#flip_book::before{
-  content:"";
-  position:absolute;
-  top:0; bottom:0; left:0;
-  width:40px;
-  transform:translateX(-50%);
-  background:linear-gradient(90deg,
-    rgba(0,0,0,0.35), transparent 45%, transparent 55%, rgba(0,0,0,0.35));
-  pointer-events:none;
-  z-index:4;
-}
-
-/* ظل تحت الكتاب كله يدي إحساس ارتفاع عن السطح */
-#flip_book{
-  box-shadow:0 40px 80px -20px rgba(0,0,0,0.5);
-}
-
-/* لما الصفحة تتقلب، الظل بيعدي في نص الورقة بالظبط لحظة ما بتبقى على حرفها */
-#page1_checkbox:checked ~ #flip_book #page1 .front_page::after,
-#page1_checkbox:checked ~ #flip_book #page1 .back_page::after,
-#page2_checkbox:checked ~ #flip_book #page2 .front_page::after,
-#page2_checkbox:checked ~ #flip_book #page2 .back_page::after,
-#page3_checkbox:checked ~ #flip_book #page3 .front_page::after,
-#page3_checkbox:checked ~ #flip_book #page3 .back_page::after,
-#page4_checkbox:checked ~ #flip_book #page4 .front_page::after,
-#page4_checkbox:checked ~ #flip_book #page4 .back_page::after,
-#page5_checkbox:checked ~ #flip_book #page5 .front_page::after,
-#page5_checkbox:checked ~ #flip_book #page5 .back_page::after{
-  background-position:100% 0%;
-}
-
-.page {
-    width: 369px;
-    height: 512px;
-    position: absolute;
-    top: 13px;
-    left: 1px;
-    border-radius: 0 5px 5px 0;
-    background-color: white;
-    transform-origin: left;
-    transform-style: preserve-3d;
-    transform: rotateY(0deg);
-    transition-duration: 0.5s;
-    box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.15);
-
-}
-
-.front_page {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    backface-visibility: hidden;
-    box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.15);
-}
-
-.front_page label {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    cursor: pointer;
-    z-index: 100;
-}
-
-.back_page {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    backface-visibility: hidden;
-    transform: rotateY(180deg);
-    z-index: 100;
-    box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.15);
-}
-
-.back_page label {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    cursor: pointer;
-    z-index: 100;
-}
-
-.edge_shading {
-    width: 369px;
-    height: 512px;
-    position: absolute;
-    z-index: 98;
-}
-
-.front_content {
-    width: 367px;
-    height: 509px;
-    position: cover;
-    top: 1px;
-    border-radius: 0 5px 5px 0;
-    z-index: 97;
-}
-
-.back_content {
-    width: 367px;
-    height: 509px;
-    position: cover;
-    top: 1px;
-    left: 1px;
-    border-radius: 5px 0 0 5px;
-    z-index: 97;
-}
-
-.back_cover {
-    position: relative;
-    z-index: -1;
-}
-
-#page1 {
-    z-index: 8;
-}
-
-#page2 {
-    z-index: 5;
-}
-
-#page3 {
-    z-index: 4;
-}
-
-#page4 {
-    z-index: 3;
-}
-
-#page5 {
-    z-index: 2;
-}
-
-#cover_checkbox:checked~#flip_book {
-    transform: translateX(184px)
-}
-
-#cover_checkbox:checked~#flip_book .front_cover {
-    transform: rotateY(-180deg);
-    transition: transform 1.5s, z-index 0.5s 0.5s;
-    z-index: -1;
-}
-
-
-#cover_checkbox:checked~#flip_book #cover {
-    width: 80%;
-    height: 80%;
-    position: absolute;
-}
-
-#page1_checkbox:checked~#flip_book #page1 {
-    transform: rotateY(-180deg);
-    z-index: 3;
-}
-
-#page2_checkbox:checked~#flip_book #page2 {
-    transform: rotateY(-180deg);
-    z-index: 4;
-}
-
-#page3_checkbox:checked~#flip_book #page3 {
-    transform: rotateY(-180deg);
-    z-index: 5;
-}
-
-#page4_checkbox:checked~#flip_book #page4 {
-    transform: rotateY(-180deg);
-    z-index: 6;
-}
-
-#page5_checkbox:checked~#flip_book #page5 {
-    transform: rotateY(-180deg);
-    z-index: 9;
-}
-
-/* ============ RESPONSIVE SCALING FOR THE FLIP BOOK ============
-   The book's internal geometry (perspective, rotateY page-flip, offsets)
-   is all fixed-px on purpose so the 3D flip keeps working correctly.
-   Instead of rewriting every measurement, we simply scale the whole
-   #flip_book down as one unit on smaller viewports. Because the opening
-   translateX(184px) is applied *inside* the same transform (before the
-   scale, in local coordinates), it automatically shrinks proportionally
-   with the book — so the two-page spread always fits the screen. */
-@media (max-width: 1024px){
-    #flip_book{ transform: scale(0.85); transform-origin: center center; }
-    #cover_checkbox:checked~#flip_book{ transform: scale(0.85) translateX(184px); }
-}
-@media (max-width: 768px){
-    #flip_book{ transform: scale(0.68); transform-origin: center center; }
-    #cover_checkbox:checked~#flip_book{ transform: scale(0.68) translateX(184px); }
-}
-@media (max-width: 480px){
-    #flip_book{ transform: scale(0.52); transform-origin: center center; }
-    #cover_checkbox:checked~#flip_book{ transform: scale(0.52) translateX(184px); }
-}
-@media (max-width: 360px){
-    #flip_book{ transform: scale(0.44); transform-origin: center center; }
-    #cover_checkbox:checked~#flip_book{ transform: scale(0.44) translateX(184px); }
-}
-
-</style>  
-
-<style>
-  /* =====================================================
-     كل الكود ده اتصمم بنفس هوية الافتتاحية (كحلي + ذهبي)
-     ===================================================== */
-  .player-stage{
-    --navy:#152238;
-    --navy-2:#1c2f4d;
-    --gold:#c9a24d;
-    --gold-bright:#e8c983;
-    --crimson:#8e1f28;
-    --cream:#f3efe4;
-
-    /* ✅ ماشي في الـ flow الطبيعي للصفحة دلوقتي، مش fixed ولا absolute
-       فبيقف تحت الكتاب مباشرة ويتحرك معاه في السكرول */
-    position:relative;
-    width:auto;
-    max-width:170px;
-    margin:0 auto;
-    padding:0;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    perspective:900px;
-    font-family:'Tajawal', sans-serif;
-    z-index:5;
-    transition:opacity .35s ease, transform .35s ease;
-    margin-top: 10px;
-  }
-  .player-stage.closed{
-    opacity:0;
-    transform:translateY(12px) scale(0.9);
-    pointer-events:none;
-  }
-  .close-btn{
-    position:absolute;
-    top:-6px;
-    right:-6px;
-    width:18px; height:18px;
-    border-radius:50%;
-    background:var(--navy-2);
-    border:1px solid rgba(201,162,77,0.5);
-    color:var(--gold-bright);
-    font-size:11px;
-    line-height:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    z-index:600;
-  }
-  .close-btn:hover{ background:var(--crimson); border-color:var(--crimson); color:var(--cream); }
-
-  /* منصة الجرامافون - قاعدة خشبية بإحساس 3D */
-  .gramo-base{
-    position:relative;
-    width:120px;
-    height:120px;
-    transform-style:preserve-3d;
-    transform:rotateX(52deg) rotateZ(0deg);
-    transition:transform .6s ease;
-  }
-  .player-stage:hover .gramo-base{ transform:rotateX(48deg) rotateZ(-2deg); }
-
-  .plinth{
-    position:absolute;
-    inset:0;
-    border-radius:50%;
-    background:
-      radial-gradient(circle at 35% 30%, #2a4368, #101b2c 70%);
-    box-shadow:
-      0 40px 60px -20px rgba(0,0,0,0.65),
-      inset 0 0 0 3px rgba(201,162,77,0.5),
-      inset 0 0 40px rgba(0,0,0,0.5);
-  }
-  .plinth::after{
-    content:"";
-    position:absolute;
-    inset:14px;
-    border-radius:50%;
-    border:1px solid rgba(201,162,77,0.35);
-  }
-
-  /* الاسطوانة (الفينيل) */
-  .vinyl{
-    position:absolute;
-    top:26px; left:26px; right:26px; bottom:26px;
-    border-radius:50%;
-    background:
-      repeating-radial-gradient(circle at 50% 50%,
-        #0a0a0a 0px, #0a0a0a 2px,
-        #1c1c1c 3px, #1c1c1c 4px);
-    box-shadow:
-      0 0 0 2px rgba(255,255,255,0.04),
-      0 6px 18px rgba(0,0,0,0.6);
-    animation:spin 3.2s linear infinite;
-    animation-play-state:paused;
-  }
-  .vinyl.spinning{ animation-play-state:running; }
-
-  @keyframes spin{
-    to{ transform:rotate(360deg); }
-  }
-
-  .vinyl-label{
-    position:absolute;
-    top:50%; left:50%;
-    width:38%; height:38%;
-    transform:translate(-50%,-50%);
-    border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, #8a6a2c 100%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    box-shadow:0 3px 10px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(0,0,0,0.15);
-  }
-  .vinyl-label span{
-    font-family:'Playfair Display', serif;
-    font-style:italic;
-    font-weight:800;
-    font-size:6px;
-    color:#1c1206;
-    letter-spacing:0.02em;
-  }
-  .vinyl-hole{
-    position:absolute;
-    top:50%; left:50%;
-    width:5px; height:5px;
-    transform:translate(-50%,-50%);
-    background:#050505;
-    border-radius:50%;
-    box-shadow:0 0 0 1px rgba(255,255,255,0.06);
-  }
-
-  /* ذراع الجرامافون (تون آرم) */
-  .tonearm-pivot{
-    position:absolute;
-    top:6%; right:2%;
-    width:12px; height:12px;
-    border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #d8b869, #8a6a2c);
-    box-shadow:0 2px 5px rgba(0,0,0,0.5);
-    z-index:5;
-  }
-  .tonearm{
-    position:absolute;
-    top:calc(6% + 4px);
-    right:calc(2% + 4px);
-    width:3px;
-    height:64px;
-    transform-origin:top center;
-    transform:rotate(-38deg);
-    transition:transform 1s cubic-bezier(.6,-0.2,.3,1.3);
-    z-index:4;
-  }
-  .tonearm.playing{ transform:rotate(6deg); }
-  .tonearm .rod{
-    position:absolute;
-    top:0; left:0; right:0; bottom:7px;
-    margin:0 auto;
-    width:2px;
-    background:linear-gradient(180deg, #e8c983, #a4813a);
-    border-radius:2px;
-    box-shadow:0 1px 4px rgba(0,0,0,0.4);
-  }
-  .tonearm .head{
-    position:absolute;
-    bottom:0; left:50%;
-    transform:translateX(-50%) rotate(20deg);
-    width:10px; height:6px;
-    background:linear-gradient(160deg,#2a2a2a,#050505);
-    border-radius:2px;
-    box-shadow:0 1px 4px rgba(0,0,0,0.5);
-  }
-
-  /* عنوان الأغنية */
-  .track-info{
-    margin-top:10px;
-    text-align:center;
-  }
-  .track-info .eyebrow{
-    font-size:7px;
-    letter-spacing:0.2em;
-    color:var(--gold-bright);
-    text-transform:uppercase;
-    opacity:0.85;
-    margin-bottom:3px;
-  }
-  .track-info h3{
-    font-family:'Playfair Display', serif;
-    font-style:italic;
-    font-weight:800;
-    color:var(--cream);
-    font-size:11px;
-  }
-
-  /* زرار التشغيل */
-  .play-btn{
-    margin-top:8px;
-    width:28px; height:28px;
-    border-radius:50%;
-    border:1.5px solid var(--gold-bright);
-    background:rgba(201,162,77,0.28);
-    box-shadow:0 0 10px rgba(232,201,131,0.35);
-    color:var(--gold-bright);
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition:background .3s ease, transform .2s ease, box-shadow .3s ease;
-  }
-  .play-btn:hover{ background:rgba(201,162,77,0.45); box-shadow:0 0 14px rgba(232,201,131,0.55); }
-  .play-btn:active{ transform:scale(0.94); }
-  .play-btn svg{ width:11px; height:11px; }
-
-  /* شريط تقدم بسيط */
-  .progress{
-    width:100%;
-    max-width:110px;
-    height:2px;
-    background:rgba(243,239,228,0.15);
-    margin-top:8px;
-    border-radius:2px;
-    overflow:hidden;
-  }
-  .progress-fill{
-    height:100%;
-    width:0%;
-    background:linear-gradient(90deg, var(--gold), var(--gold-bright));
-  }
-
-  @media (max-width:1024px){
-    .player-stage{ transform-origin: top center; transform: scale(0.85); }
-    .player-stage.closed{ transform: translateY(12px) scale(0.77); }
-  }
-  @media (max-width:768px){
-    .player-stage{ transform-origin: top center; transform: scale(0.7); }
-    .player-stage.closed{ transform: translateY(12px) scale(0.63); }
-  }
-  @media (max-width:480px){
-    .player-stage{
-      transform-origin: top center;
-      transform: scale(0.6);
-    }
-    .player-stage.closed{
-      transform: translateY(12px) scale(0.54);
-    }
-  }
-  @media (max-width:360px){
-    .player-stage{ transform-origin: top center; transform: scale(0.5); }
-    .player-stage.closed{ transform: translateY(12px) scale(0.45); }
-  }
-</style>
-
-
-
-
 <script>
-(function(){
-  const audio = document.getElementById('audio');
-  const btn = document.getElementById('playBtn');
-  const vinyl = document.getElementById('vinyl');
-  const tonearm = document.getElementById('tonearm');
-  const playIcon = document.getElementById('playIcon');
-  const pauseIcon = document.getElementById('pauseIcon');
-  const fill = document.getElementById('progressFill');
+/* =========================================================
+   CONFIG — edit anything here to customize the site for a client.
+   ========================================================= */
+const CONFIG = {
+  year: "2026 – 2027",
+  heroTitle: "Our <em>Endless</em> Memories",
+  heroSubtitle: "From the first day of school to graduation day — every moment, kept right here.",
+  heroImage: "https://res.cloudinary.com/df5qqg0v0/image/upload/v1783204729/ChatGPT_Image_Jul_4_2026_at_07_10_51_PM_hbsrhw.png",
 
-  btn.addEventListener('click', function(){
-    if(audio.paused){
-      audio.play().catch(()=>{ /* المتصفح ممكن يمنع التشغيل التلقائي قبل تفاعل المستخدم */ });
-      vinyl.classList.add('spinning');
-      tonearm.classList.add('playing');
-      playIcon.style.display='none';
-      pauseIcon.style.display='block';
-    } else {
-      audio.pause();
-      vinyl.classList.remove('spinning');
-      tonearm.classList.remove('playing');
-      playIcon.style.display='block';
-      pauseIcon.style.display='none';
-    }
-  });
+  reel: [
+    { num:"01", title:"Day One", caption:"The beginning we'll never forget", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png" },
+    { num:"02", title:"School Days", caption:"Laughter that never got old", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp" },
+    { num:"03", title:"Final Exams", caption:"Nerves that became a good story", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg" },
+    { num:"04", title:"Graduation Day", caption:"The moment we'd waited for", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185900/IMG_0032_vyy2e5.jpg" },
+    { num:"05", title:"The Ceremony", caption:"Joy no one will forget", image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783138346/happy-students-graduation-ceremony_dt4ftd.jpg" },
+  ],
 
-  audio.addEventListener('timeupdate', function(){
-    if(audio.duration){
-      fill.style.width = (audio.currentTime/audio.duration*100) + '%';
-    }
-  });
+  archiveTitle: "Pictures From Our Journey",
+  archiveSubtitle: "Every photo here tells a moment from the best years of our lives.",
+  gallery: [
+    { image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185899/IMG_0031_nsdn7a.jpg", caption:"With friends" },
+    { image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185482/ChatGPT_Image_Jul_4_2026_at_08_13_36_PM_dinxtq.png", caption:"The crowning moment" },
+    { image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png", caption:"Where it began" },
+    { image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp", caption:"The school years" },
+    { image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783138346/happy-students-graduation-ceremony_dt4ftd.jpg", caption:"A day to remember" },
+    { image:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg", caption:"Together till the end" },
+  ],
 
-  audio.addEventListener('ended', function(){
-    vinyl.classList.remove('spinning');
-    tonearm.classList.remove('playing');
-    playIcon.style.display='block';
-    pauseIcon.style.display='none';
-  });
+  quotes: [
+    { text:"I won't forget a single moment we shared through these years.", who:"— Ahmed" },
+    { text:"The friendships built here will last a lifetime.", who:"— Sara" },
+    { text:"Every hard moment turned into a memory we now laugh about.", who:"— Youssef" },
+  ],
 
-  document.getElementById('closeBtn').addEventListener('click', function(){
-    audio.pause();
-    vinyl.classList.remove('spinning');
-    tonearm.classList.remove('playing');
-    playIcon.style.display='block';
-    pauseIcon.style.display='none';
-  });
-})();
-</script>
+  closingTitle: "This Isn't the End — It's a New Beginning",
+  closingSubtitle: "Thank you for every moment, every laugh, and every memory. The next chapter is going to be even better.",
+  sealText: "Class of<br>2027",
+  signatures: ["Ahmed", "Sara", "Youssef", "Mariam", "Karim", "Hana", "Laila"],
 
-<script>
-/* صوت تقليب الصفحة - بيشتغل مع الغلاف وكل صفحة في الكتاب */
-(function(){
-  const flipSound = document.getElementById('pageFlipSound');
-  if(!flipSound) return;
+  book: {
+    coverImage: "https://res.cloudinary.com/df5qqg0v0/image/upload/v1783381839/ChatGPT_Image_Jul_7_2026_at_02_50_28_AM_i4uxxl.png",
+    coverTitle: "Class of 2027",
+    coverSubtitle: "Riverside High School",
+    coverBackImage: "https://res.cloudinary.com/df5qqg0v0/image/upload/v1783181659/ChatGPT_Image_Jul_4_2026_at_07_13_56_PM_gv7mlz.png",
+    backLabel: "The End",
+    leaves: [
+      {
+        front:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182300/IMG_0027_tcrhyb.webp", frontCaption:"Freshman year",
+        back:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783182478/IMG_0028_vsfhtm.jpg", backCaption:"Field trip"
+      },
+      {
+        front:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185900/IMG_0032_vyy2e5.jpg", frontCaption:"Study group",
+        back:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185899/IMG_0031_nsdn7a.jpg", backCaption:"Prom night"
+      },
+      {
+        front:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783138346/happy-students-graduation-ceremony_dt4ftd.jpg", frontCaption:"Graduation day",
+        back:"https://res.cloudinary.com/df5qqg0v0/image/upload/v1783185482/ChatGPT_Image_Jul_4_2026_at_08_13_36_PM_dinxtq.png", backCaption:"One last photo"
+      },
+    ],
+    // optional: URL to a short page-turn sound effect. Leave empty to disable.
+    pageFlipSound: "https://res.cloudinary.com/df5qqg0v0/video/upload/v1783388054/Paper_turn_sound_FX-_Royalty_Free_HD_-_Gaming_Sounds_Movie_FX_mfmsxn.mp3"
+  },
 
-  const pageCheckboxes = document.querySelectorAll(
-    '#cover_checkbox, #page1_checkbox, #page2_checkbox, #page3_checkbox, #page4_checkbox, #page5_checkbox'
-  );
+  audioSrc: "https://res.cloudinary.com/df5qqg0v0/video/upload/v1783388056/e0805c036cd762a9d08eeaf2ff315b95_4_pok7nc.mp3",
+  audioLabel: "Memory soundtrack",
+};
 
-  pageCheckboxes.forEach(function(checkbox){
-    checkbox.addEventListener('change', function(){
-      flipSound.currentTime = 0;
-      flipSound.play().catch(function(){
-        /* المتصفح ممكن يمنع التشغيل التلقائي قبل أول تفاعل من المستخدم */
-      });
-    });
-  });
-})();
-</script>
+/* =========================================================
+   RENDER
+   ========================================================= */
+document.getElementById('heroMedia').style.backgroundImage = `url(${CONFIG.heroImage})`;
+document.getElementById('heroYear').textContent = CONFIG.year;
+document.getElementById('heroTitle').innerHTML = CONFIG.heroTitle;
+document.getElementById('heroSub').textContent = CONFIG.heroSubtitle;
 
-<script>
-/* ---------------------------------------------------------------
-   Graduation celebration background (light, floating 3D emojis)
-   - Drifts across the entire page, very lightly transparent
-   - Purely decorative: pointer-events disabled so it never blocks clicks
-   --------------------------------------------------------------- */
-(function(){
-  const layer = document.getElementById('gradBgLayer');
-  if(!layer) return;
-
-  const EMOJIS = ['🎓','📜','🎉','✨','🥳','🏆','⭐','🎊'];
-  const isSmall = window.matchMedia('(max-width:640px)').matches;
-  const COUNT = isSmall ? 12 : 22;
-
-  const frag = document.createDocumentFragment();
-  for(let i = 0; i < COUNT; i++){
-    const piece = document.createElement('span');
-    const roll = Math.random();
-    piece.className = 'piece' + (roll < 0.3 ? ' small' : roll > 0.75 ? ' large' : '');
-    piece.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
-
-    const left = Math.random() * 100;
-    const duration = 12 + Math.random() * 9;      // 12s - 21s per loop
-    const negativeDelay = Math.random() * duration; // stagger so it looks already in motion on load
-    const drift = Math.round(Math.random() * 90 - 45) + 'px';
-
-    piece.style.left = left + '%';
-    piece.style.setProperty('--drift', drift);
-    piece.style.animationDuration = duration + 's';
-    piece.style.animationDelay = '-' + negativeDelay + 's';
-
-    frag.appendChild(piece);
-  }
-  layer.appendChild(frag);
-})();
-</script>
-
-<script>
-
-   /******************************
-* RESPONSIVE WARNING BEHAVIOR *
-******************************/
-
-const responsiveWarning = document.getElementById("responsive-warning");
-// Enable/disable responsive warning.
-const responsiveDesign = true;
-// Mobile width limit.
-const threshold = 768;
-
-// Show or hide modal based on screen size.
-function checkResponsiveState() {
-  if (!responsiveWarning) return;
-  const small = window.innerWidth <= threshold;
-
-  if (!responsiveDesign && small) {
-    if (!responsiveWarning.open) {
-      responsiveWarning.showModal();
-      document.body.classList.add("overflow-hidden");
-    }
-  } else {
-    if (responsiveWarning.open) {
-      responsiveWarning.close();
-      document.body.classList.remove("overflow-hidden");
-    }
-  }
-}
-
-// Initial check.
-checkResponsiveState();
-
-// Real-time resize detection (debounced to avoid excessive reflows).
-let resizeTimer;
-window.addEventListener("resize", function(){
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(checkResponsiveState, 150);
+const reelTrack = document.getElementById('reelTrack');
+CONFIG.reel.forEach(item=>{
+  const card = document.createElement('div');
+  card.className = 'reel-card';
+  card.innerHTML = `
+    <img src="${item.image}" alt="${item.title}">
+    <div class="frame-shade"></div>
+    <div class="cap">
+      <div class="num">${item.num}</div>
+      <h3>${item.title}</h3>
+      <p>${item.caption}</p>
+    </div>`;
+  reelTrack.appendChild(card);
 });
-   </script>
 
-  </body>
+document.getElementById('archiveTitle').textContent = CONFIG.archiveTitle;
+document.getElementById('archiveSub').textContent = CONFIG.archiveSubtitle;
+const grid = document.getElementById('galleryGrid');
+CONFIG.gallery.forEach(item=>{
+  const fig = document.createElement('figure');
+  fig.innerHTML = `<img src="${item.image}" alt="${item.caption}" loading="lazy"><figcaption>${item.caption}</figcaption>`;
+  fig.addEventListener('click', ()=> openLightbox(item.image));
+  grid.appendChild(fig);
+});
 
+const quoteWrap = document.getElementById('quoteWrap');
+const dotsWrap = document.getElementById('quoteDots');
+CONFIG.quotes.forEach((q,i)=>{
+  const el = document.createElement('div');
+  el.className = 'quote' + (i===0 ? ' active' : '');
+  el.innerHTML = `&ldquo;${q.text}&rdquo;<span class="who">${q.who}</span>`;
+  quoteWrap.appendChild(el);
+
+  const dot = document.createElement('span');
+  if(i===0) dot.classList.add('active');
+  dot.addEventListener('click', ()=> showQuote(i));
+  dotsWrap.appendChild(dot);
+});
+let quoteIndex = 0;
+function showQuote(i){
+  document.querySelectorAll('.quote').forEach((el,idx)=> el.classList.toggle('active', idx===i));
+  document.querySelectorAll('.dots span').forEach((el,idx)=> el.classList.toggle('active', idx===i));
+  quoteIndex = i;
+}
+setInterval(()=> showQuote((quoteIndex+1) % CONFIG.quotes.length), 5000);
+
+document.getElementById('sealText').innerHTML = CONFIG.sealText;
+document.getElementById('closingTitle').textContent = CONFIG.closingTitle;
+document.getElementById('closingSub').textContent = CONFIG.closingSubtitle;
+const sigWrap = document.getElementById('signatures');
+CONFIG.signatures.forEach(name=>{
+  const s = document.createElement('span');
+  s.textContent = name;
+  sigWrap.appendChild(s);
+});
+
+document.getElementById('audio').src = CONFIG.audioSrc;
+document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
+
+/* =========================================================
+   YEARBOOK — JS-driven flipbook (no checkbox hacks, so it
+   scales to any number of pages and works reliably on mobile).
+   ========================================================= */
+(function(){
+  const book = document.getElementById('book');
+  const stage = document.getElementById('bookStage');
+  const prevBtn = document.getElementById('bookPrev');
+  const nextBtn = document.getElementById('bookNext');
+  const countEl = document.getElementById('bookCount');
+  const flipSound = document.getElementById('pageFlipSound');
+  const data = CONFIG.book;
+
+  document.getElementById('bookBackLabel').textContent = data.backLabel || '';
+  if(data.pageFlipSound) flipSound.src = data.pageFlipSound;
+
+  const sheetEls = [];
+
+  // Cover sheet
+  const cover = document.createElement('div');
+  cover.className = 'sheet';
+  cover.innerHTML = `
+    <div class="face front cover-face" style="background-image:url(${data.coverImage});background-size:cover;background-position:center;">
+      <div class="cover-text">
+        <div class="eyebrow">${data.coverSubtitle || ''}</div>
+        <h3>${data.coverTitle || ''}</h3>
+      </div>
+    </div>
+    <div class="face back"><img src="${data.coverBackImage || data.coverImage}" alt=""></div>`;
+  book.appendChild(cover);
+  sheetEls.push(cover);
+
+  // Leaf sheets
+  (data.leaves || []).forEach(leaf=>{
+    const sheet = document.createElement('div');
+    sheet.className = 'sheet';
+    sheet.innerHTML = `
+      <div class="face front">
+        <img src="${leaf.front}" alt="">
+        ${leaf.frontCaption ? `<div class="page-caption">${leaf.frontCaption}</div>` : ''}
+      </div>
+      <div class="face back">
+        <img src="${leaf.back}" alt="">
+        ${leaf.backCaption ? `<div class="page-caption">${leaf.backCaption}</div>` : ''}
+      </div>`;
+    book.appendChild(sheet);
+    sheetEls.push(sheet);
+  });
+
+  let currentPage = 0;
+  const total = sheetEls.length;
+
+  function render(){
+    sheetEls.forEach((el,i)=>{
+      if(i < currentPage){
+        el.style.transform = 'rotateY(-180deg)';
+        el.style.zIndex = i + 1;
+      } else {
+        el.style.transform = 'rotateY(0deg)';
+        el.style.zIndex = total - i;
+      }
+    });
+    prevBtn.disabled = currentPage === 0;
+    nextBtn.disabled = currentPage === total;
+    countEl.textContent = currentPage === 0 ? 'Closed' : `${currentPage} / ${total}`;
+  }
+
+  function playFlip(){
+    if(!data.pageFlipSound) return;
+    flipSound.currentTime = 0;
+    flipSound.play().catch(()=>{});
+  }
+
+  function next(){ if(currentPage < total){ currentPage++; playFlip(); render(); } }
+  function prev(){ if(currentPage > 0){ currentPage--; playFlip(); render(); } }
+
+  nextBtn.addEventListener('click', next);
+  prevBtn.addEventListener('click', prev);
+  stage.addEventListener('click', e=>{
+    const rect = stage.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if(x > rect.width / 2) next(); else prev();
+  });
+
+  render();
+})();
+
+/* =========================================================
+   LIGHTBOX
+   ========================================================= */
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+function openLightbox(src){ lightboxImg.src = src; lightbox.classList.add('open'); }
+function closeLightbox(){ lightbox.classList.remove('open'); }
+document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e=>{ if(e.target === lightbox) closeLightbox(); });
+
+/* =========================================================
+   AUDIO
+   ========================================================= */
+const audio = document.getElementById('audio');
+const pill = document.getElementById('audioPill');
+const playIcon = document.getElementById('playIcon');
+const pauseIcon = document.getElementById('pauseIcon');
+pill.addEventListener('click', ()=>{
+  if(audio.paused){
+    audio.play().catch(()=>{});
+    pill.classList.add('playing');
+    playIcon.style.display='none'; pauseIcon.style.display='block';
+  } else {
+    audio.pause();
+    pill.classList.remove('playing');
+    playIcon.style.display='block'; pauseIcon.style.display='none';
+  }
+});
+
+/* =========================================================
+   ANIMATION — GSAP
+   ========================================================= */
+gsap.registerPlugin(ScrollTrigger);
+
+// Hero entrance
+gsap.timeline({defaults:{ease:'power3.out'}})
+  .to('#heroMedia',{scale:1,duration:2.4,ease:'power2.out'},0)
+  .fromTo('.hero-year',{opacity:0,y:10},{opacity:1,y:0,duration:.8},.2)
+  .fromTo('.hero-title',{opacity:0,y:24},{opacity:1,y:0,duration:1},.35)
+  .fromTo('.hero-sub',{opacity:0,y:16},{opacity:1,y:0,duration:.9},.55);
+gsap.set('#heroMedia',{scale:1.12});
+
+// Horizontal reel scrub — the film-reel effect
+function initReel(){
+  const track = document.getElementById('reelTrack');
+  const distance = track.scrollWidth - window.innerWidth + 160;
+  if(distance <= 0) return;
+  gsap.to(track,{
+    x: -distance,
+    ease:'none',
+    scrollTrigger:{
+      trigger:'.reel-pin',
+      start:'top top',
+      end:()=>'+=' + (distance + window.innerHeight),
+      scrub:1,
+      pin:true,
+      invalidateOnRefresh:true
+    }
+  });
+}
+window.addEventListener('load', initReel);
+
+// Archive photos reveal
+gsap.utils.toArray('.grid figure').forEach((fig,i)=>{
+  gsap.fromTo(fig,{opacity:0,y:26},{
+    opacity:1,y:0,duration:.7,ease:'power2.out',
+    scrollTrigger:{ trigger:fig, start:'top 92%' }
+  });
+});
+
+// Yearbook reveal
+gsap.fromTo('.book-heading, .book-stage, .book-controls, .book-hint',
+  {opacity:0,y:22},
+  {opacity:1,y:0,duration:.8,stagger:.1,
+   scrollTrigger:{ trigger:'.book-section', start:'top 70%' }});
+
+// Seal stamp
+gsap.to('#seal',{
+  scale:1, rotate:0, opacity:1,
+  duration:.9, ease:'back.out(1.8)',
+  scrollTrigger:{ trigger:'.closing', start:'top 65%' }
+});
+gsap.fromTo('.closing h2, .closing p, .signatures',
+  {opacity:0,y:18},
+  {opacity:1,y:0,duration:.8,stagger:.15,
+   scrollTrigger:{ trigger:'.closing', start:'top 55%' }});
+</script>
+</body>
 </html>
-
