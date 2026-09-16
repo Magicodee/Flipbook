@@ -219,15 +219,124 @@ img{display:block;max-width:100%;}
   font-size:clamp(26px,4.4vw,44px);
 }
 .book-stage{
-  width:min(92vw,700px);
-  height:min(62vh,440px);
+  perspective:2800px;
+  perspective-origin:50% 50%;
+  width:min(88vw,380px);
+  height:min(72vh,480px);
   margin:0 auto;
   position:relative;
-  border-radius:2px;
-  box-shadow:0 30px 70px -20px rgba(0,0,0,.65);
-  overflow:hidden;
+  cursor:grab;
+  touch-action:pan-y;
+  user-select:none;
 }
-.book-stage canvas{display:block;margin:0 auto;}
+.book-stage:active{cursor:grabbing;}
+.book-tilt{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transform:rotateX(11deg);
+}
+/* soft contact shadow the book casts on the "table" beneath it */
+.book-shadow-under{
+  position:absolute;
+  left:6%;right:6%;bottom:-26px;
+  height:40px;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 72%);
+  filter:blur(2px);
+  z-index:0;
+}
+.book-static-back{
+  position:absolute;inset:0;
+  border-radius:1px 3px 3px 1px;
+  background:
+    linear-gradient(100deg, rgba(255,255,255,.05) 0%, transparent 12%),
+    linear-gradient(160deg,#1c2f4d,#0a1120);
+  box-shadow:0 26px 55px -18px rgba(0,0,0,.7);
+  display:flex;align-items:center;justify-content:center;
+  z-index:0;
+}
+.book-static-back span{
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  letter-spacing:.2em;font-size:12px;color:rgba(243,239,228,.4);
+}
+/* stacked-paper edge, visible along the right side of the block, like real page edges */
+.page-edges{
+  position:absolute;
+  top:3%;bottom:3%;right:-3px;
+  width:7px;
+  z-index:1;
+  border-radius:0 2px 2px 0;
+  background:
+    repeating-linear-gradient(180deg,
+      #efe6cf 0px, #efe6cf 1.5px,
+      #d9cba3 1.5px, #d9cba3 2.2px);
+  box-shadow: inset -1px 0 2px rgba(0,0,0,.25), 1px 0 3px rgba(0,0,0,.3);
+}
+/* gutter/spine shading cast across the pages nearest the binding */
+.spine-shade{
+  position:absolute;top:0;bottom:0;left:0;width:26%;
+  z-index:6;pointer-events:none;
+  background:linear-gradient(90deg, rgba(0,0,0,.35), transparent);
+}
+
+.book{position:relative;width:100%;height:100%;transform-style:preserve-3d;}
+.sheet{
+  position:absolute;inset:0;
+  transform-style:preserve-3d;
+  transform-origin:left center;
+  will-change:transform;
+}
+.sheet .face{
+  position:absolute;inset:0;
+  backface-visibility:hidden;
+  border-radius:1px 3px 3px 1px;
+  overflow:hidden;
+  background:#efe9da;
+  box-shadow:0 22px 50px -18px rgba(0,0,0,.65);
+}
+.sheet .face.back{transform:rotateY(180deg);}
+.sheet .face img{width:100%;height:100%;object-fit:cover;display:block;}
+/* fine paper-fiber texture over every page, multiplied over the photo/color */
+.sheet .face .paper-grain{
+  position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.05;
+  mix-blend-mode:multiply;
+  pointer-events:none;
+}
+/* the moving fold-shadow that sweeps across whichever page is mid-turn,
+   giving the illusion of the paper bending rather than rotating flat */
+.sheet .face .fold-shadow{
+  position:absolute;inset:0;
+  background:linear-gradient(90deg, transparent 0%, rgba(0,0,0,.5) 50%, transparent 100%);
+  opacity:0;
+  pointer-events:none;
+}
+.sheet .face .page-caption{
+  position:absolute;left:0;right:0;bottom:0;padding:14px 16px;
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--cream);
+  background:linear-gradient(0deg,rgba(6,8,12,.85),transparent);
+}
+.cover-face{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding:28px;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,.09) 0%, transparent 18%),
+    linear-gradient(160deg,#182a46,#0a1120);
+}
+.cover-face .cover-photo{
+  position:absolute;
+  top:14%;left:14%;right:14%;
+  height:46%;
+  border:6px solid #f4efe3;
+  box-shadow:0 10px 24px rgba(0,0,0,.45);
+  background-size:cover;background-position:center;
+}
+.cover-face .cover-text{position:relative;z-index:2;text-align:center;}
+.cover-face .cover-text .eyebrow{margin-bottom:8px;}
+.cover-face .cover-text h3{
+  font-family:'Playfair Display',serif;font-style:italic;font-weight:800;
+  font-size:20px;color:var(--gold-bright);
+}
 .book-controls{margin-top:34px;display:flex;align-items:center;justify-content:center;gap:22px;}
 .book-btn{
   width:38px;height:38px;border-radius:50%;
@@ -440,14 +549,23 @@ img{display:block;max-width:100%;}
     <div class="eyebrow" style="text-align:center;">The Yearbook</div>
     <h2>Turn the Pages</h2>
   </div>
-  <div class="book-stage" id="bookStage"></div>
+  <div class="book-stage" id="bookStage">
+    <div class="book-shadow-under"></div>
+    <div class="book-tilt">
+      <div class="book-static-back"><span id="bookBackLabel"></span></div>
+      <div class="page-edges"></div>
+      <div class="book" id="book"></div>
+      <div class="spine-shade"></div>
+    </div>
+  </div>
   <div class="book-controls">
     <button class="book-btn" id="bookPrev" aria-label="Previous page">‹</button>
     <div class="book-count" id="bookCount"></div>
     <button class="book-btn" id="bookNext" aria-label="Next page">›</button>
   </div>
-  <div class="book-hint">Drag a page, tap the book, or use the arrows to turn a page</div>
+  <div class="book-hint">Drag a page corner, tap the book, or use the arrows to turn a page</div>
 </section>
+<audio id="pageFlipSound" preload="auto"></audio>
 
 <!-- ============ ARCHIVE ============ -->
 <section class="archive">
@@ -648,7 +766,7 @@ document.getElementById('heroSub').textContent = CONFIG.heroSubtitle;
 
   function startAuto(){
     stopAuto();
-    timer = setInterval(next, 3200);
+    timer = setInterval(next, 2000);
   }
   function stopAuto(){
     if(timer){ clearInterval(timer); timer = null; }
@@ -857,7 +975,7 @@ document.getElementById('audioLabel').textContent = CONFIG.audioLabel;
   // The book's spine sits on its left edge, so once it's open the
   // visible pages read as leaning left of the container's center.
   // Nudge the whole stage right while open, and back when closed.
-  const OPEN_SHIFT = 26; // px — increase/decrease to taste
+  const OPEN_SHIFT = 166; // px — increase/decrease to taste
   function shiftOpen(){
     gsap.to(stage, { x: OPEN_SHIFT, duration:.7, ease:'power2.out' });
   }
